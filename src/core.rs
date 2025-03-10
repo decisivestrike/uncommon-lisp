@@ -58,10 +58,12 @@ pub fn run_file(path: &str) -> Result<(), Box<dyn Error>> {
 
 fn get_expression(chars: &mut Peekable<Chars<'_>>) -> Option<String> {
     let mut expression = String::new();
-    let mut depth = 0;
+    let mut depth = 1;
 
-    if Some(&'(') != chars.peek() {
-        return None;
+    while chars.peek() != Some(&'(') {
+        if chars.next() == None {
+            return None;
+        }
     }
 
     expression.push(chars.next().unwrap());
@@ -74,10 +76,10 @@ fn get_expression(chars: &mut Peekable<Chars<'_>>) -> Option<String> {
             }
             ')' => {
                 expression.push(ch);
+                depth -= 1;
                 if depth == 0 {
                     return Some(expression);
                 }
-                depth -= 1;
             }
             _ => expression.push(ch),
         }

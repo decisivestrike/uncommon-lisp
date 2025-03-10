@@ -28,7 +28,10 @@ pub fn parse_expression(chars: &mut Peekable<Chars<'_>>) -> Result<Token, ParseE
                 chars.next();
                 continue;
             }
-            ')' => break,
+            ')' => {
+                chars.next();
+                break;
+            }
             '(' => parse_expression(chars)?,
             '[' => parse_list(chars),
             '{' => parse_object(chars),

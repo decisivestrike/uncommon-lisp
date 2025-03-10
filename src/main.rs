@@ -1,6 +1,7 @@
 use core::{repl, run_file, tokenize_file};
 use std::{env, error::Error};
 
+mod builtins;
 mod core;
 mod executer;
 mod parser;
