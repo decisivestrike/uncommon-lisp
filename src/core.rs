@@ -5,7 +5,7 @@ use crate::{executer::execute, parser::parse_expression};
 
 pub fn repl() -> Result<(), Box<dyn Error>> {
     loop {
-        print!("lisp> ");
+        print!("ul> ");
         io::stdout().flush()?;
 
         let mut input = String::new();
@@ -22,7 +22,7 @@ pub fn repl() -> Result<(), Box<dyn Error>> {
             match get_expression(&mut chars) {
                 Some(expression) => {
                     let expression = parse_expression(&mut expression.chars().peekable())?;
-                    println!("{}", execute(expression)?.value());
+                    println!("{}", execute(expression)?.value()?);
                 }
                 None => break,
             }
@@ -32,37 +32,25 @@ pub fn repl() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn run_file(path: &str) -> Result<(), Box<dyn Error>> {
-    // let file_content = fs::read_to_string(path)?;
-    // let mut chars = file_content.chars().peekable();
-
-    // loop {
-    //     match get_expression(&mut chars) {
-    //         Some(expression) => {
-    //             let expression = parse_expression(&mut expression.chars().peekable())?;
-    //             println!(execute(expression));
-    //         }
-    //         None => break,
-    //     }
-    // }
-
-    // Ok(())
-
-    todo!()
-}
-
 pub fn tokenize_file(path: &str) -> Result<(), Box<dyn Error>> {
     let file_content = fs::read_to_string(path)?;
     let mut chars = file_content.chars().peekable();
 
-    loop {
-        match get_expression(&mut chars) {
-            Some(expression) => {
-                let token = parse_expression(&mut expression.chars().peekable())?;
-                println!("{}", token);
-            }
-            None => break,
-        }
+    while let Some(expression_literal) = get_expression(&mut chars) {
+        let token = parse_expression(&mut expression_literal.chars().peekable())?;
+        println!("{}", token);
+    }
+
+    Ok(())
+}
+
+pub fn run_file(path: &str) -> Result<(), Box<dyn Error>> {
+    let file_content = fs::read_to_string(path)?;
+    let mut chars = file_content.chars().peekable();
+
+    while let Some(expression_literal) = get_expression(&mut chars) {
+        let expression = parse_expression(&mut expression_literal.chars().peekable())?;
+        execute(expression)?;
     }
 
     Ok(())
@@ -78,21 +66,24 @@ fn get_expression(chars: &mut Peekable<Chars<'_>>) -> Option<String> {
 
     expression.push(chars.next().unwrap());
 
-    loop {
-        match chars.next() {
-            Some(ch) if ch == '(' => {
+    while let Some(ch) = chars.next() {
+        match ch {
+            '(' => {
                 expression.push(ch);
                 depth += 1;
             }
-            Some(ch) if ch == ')' => {
+            ')' => {
                 expression.push(ch);
                 if depth == 0 {
                     return Some(expression);
                 }
                 depth -= 1;
             }
-            Some(ch) => expression.push(ch),
-            None => return None,
+            _ => expression.push(ch),
         }
     }
+
+    // TODO: add incomplete expression check
+
+    None
 }

@@ -95,10 +95,13 @@ fn parse_identifier(chars: &mut Peekable<Chars<'_>>) -> Token {
 }
 
 fn parse_list(chars: &mut Peekable<Chars<'_>>) -> Token {
+    chars.next();
+
     todo!()
 }
 
 fn parse_object(chars: &mut Peekable<Chars<'_>>) -> Token {
+    chars.next();
     todo!()
 }
 
@@ -107,17 +110,35 @@ mod tests {
     use super::*;
 
     #[test]
+    fn number() {
+        let mut chars = "123.456".chars().peekable();
+
+        let result = Token::Number(123.456);
+
+        assert_eq!(result, parse_number(&mut chars));
+    }
+
+    #[test]
     fn string() {
-        let mut iter = "\"Hello\"".chars().peekable();
+        let mut chars = "\"Hello\"".chars().peekable();
 
         let result = Ok(Token::String("Hello".to_string()));
 
-        assert_eq!(result, parse_string(&mut iter));
+        assert_eq!(result, parse_string(&mut chars));
+    }
+
+    #[test]
+    fn bool() {
+        let mut chars = "true".chars().peekable();
+
+        let result = Token::Bool(true);
+
+        assert_eq!(result, parse_identifier(&mut chars));
     }
 
     #[test]
     fn sum_of_two() {
-        let mut iter = "(sum 1 1)".chars().peekable();
+        let mut chars = "(sum 1 1)".chars().peekable();
 
         let result = Ok(Token::Expression(vec![
             Token::Identifier("sum".to_string()),
@@ -125,6 +146,6 @@ mod tests {
             Token::Number(1.0),
         ]));
 
-        assert_eq!(result, parse_expression(&mut iter));
+        assert_eq!(result, parse_expression(&mut chars));
     }
 }

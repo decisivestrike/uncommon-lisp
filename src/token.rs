@@ -1,6 +1,9 @@
 use std::fmt::Display;
 
+use crate::{executer::execute, parser::ParseError};
+
 #[derive(Clone, Debug, PartialEq)]
+#[allow(dead_code)]
 pub enum Token {
     Number(f64),
     String(String),
@@ -15,12 +18,13 @@ pub enum Token {
 }
 
 impl Token {
-    pub fn value(self) -> String {
+    pub fn value(self) -> Result<String, ParseError> {
         match self {
-            Self::Number(value) => value.to_string(),
-            Self::String(value) | Self::Identifier(value) => value,
-            Self::Bool(value) => value.to_string(),
-            Self::Nil => "Nil".to_string(),
+            Self::Expression(_) => execute(self)?.value(),
+            Self::Number(value) => Ok(value.to_string()),
+            Self::String(value) | Self::Identifier(value) => Ok(value),
+            Self::Bool(value) => Ok(value.to_string()),
+            Self::Nil => Ok("Nil".to_string()),
             _ => todo!(),
         }
     }

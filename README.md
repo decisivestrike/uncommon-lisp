@@ -12,6 +12,11 @@ Entities:
 - Expression
 
 ```lisp
+# Empty expression
+() -> Nil
+```
+
+```lisp
 (var name "Hello")
 (var age (+ 10 10))
 (var list [1 2 3])
