@@ -148,4 +148,23 @@ mod tests {
 
         assert_eq!(result, parse_expression(&mut chars));
     }
+
+    #[test]
+    fn sum_of_sum() {
+        let mut chars = "(sum (sum 1)(sum 1))".chars().peekable();
+
+        let result = Ok(Token::Expression(vec![
+            Token::Identifier("sum".to_string()),
+            Token::Expression(vec![
+                Token::Identifier("sum".to_string()),
+                Token::Number(1.0),
+            ]),
+            Token::Expression(vec![
+                Token::Identifier("sum".to_string()),
+                Token::Number(1.0),
+            ]),
+        ]));
+
+        assert_eq!(result, parse_expression(&mut chars));
+    }
 }
