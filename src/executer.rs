@@ -24,13 +24,31 @@ pub fn execute(token: Token) -> Result<Token, RuntimeError> {
                     "mul" => builtins::mul(tokens),
                     "div" => builtins::div(tokens),
                     "print" => builtins::print(tokens),
-                    _ => todo!(),
+                    _ => panic!("Undefined function"),
                 },
                 _ => Err(RuntimeError::TypeMismatch {
                     expected: "Identifier".to_string(),
-                })?,
+                }),
             }
         }
         _ => Err(RuntimeError::InvalidExpression),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sum_of_two() {
+        let expression = Token::Expression(vec![
+            Token::Identifier("add".to_string()),
+            Token::Number(1.0),
+            Token::Number(1.0),
+        ]);
+
+        let expected = Token::Number(2.0);
+
+        assert_eq!(execute(expression).unwrap(), expected);
     }
 }

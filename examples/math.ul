@@ -1,14 +1,16 @@
+# This should print 17
 (print 
-    (sum 
-        (sum 2 3 4)
+    (add 
+        (add 2 3 4)
         (mul 2 2 2)
     )
 ) 
 
+# This should print 11 and 120
 (print
-    (sum 
-        (div 12 2)
+    (add
         (div 12 2 2)
+        (sub 12 2 2 3)
     )
     (mul 1 2 3 4 5)
 )

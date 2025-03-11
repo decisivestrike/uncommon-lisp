@@ -1,4 +1,3 @@
-#[allow(dead_code)]
 use std::{
     io::{Write, stdout},
     vec::IntoIter,
@@ -108,7 +107,23 @@ pub fn div(mut tokens: IntoIter<Token>) -> Result<Token, RuntimeError> {
     Ok(Token::Number(base))
 }
 
-pub fn set_variable(mut tokens: IntoIter<Token>) {
+pub fn set_variable(mut tokens: IntoIter<Token>) -> Result<Token, RuntimeError> {
+    if tokens.len() < 2 {
+        return Err(RuntimeError::NotEnoughArgs);
+    }
+
+    let name = tokens.next().unwrap();
+
+    if !matches!(name, Token::Identifier(_)) {
+        return Err(RuntimeError::TypeMismatch {
+            expected: "Identifier".to_string(),
+        });
+    }
+
+    let value = tokens.next().unwrap();
+
+    // Set name value
+
     todo!()
 }
 

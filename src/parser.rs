@@ -20,17 +20,39 @@ impl<'a> Parser<'a> {
     pub fn parse(mut self) -> Result<Vec<Token>, ParseError> {
         let mut expressions = Vec::new();
 
-        while let Some(e) = self.parse_expression()? {
-            expressions.push(e);
+        loop {
+            self.skip_before_expression();
+
+            match self.parse_expression()? {
+                Some(e) => expressions.push(e),
+                None => break,
+            }
         }
 
         Ok(expressions)
     }
 
+    fn skip_before_expression(&mut self) {
+        while let Some(&ch) = self.chars.peek() {
+            match ch {
+                '(' => break,
+                '\n' => {
+                    self.chars.next();
+                    self.line += 1;
+                    self.position = 0;
+                }
+                _ => {
+                    self.chars.next();
+                    self.position += 1;
+                }
+            }
+        }
+    }
+
     fn parse_expression(&mut self) -> Result<Option<Token>, ParseError> {
         let mut tokens = Vec::new();
 
-        self.chars.find(|&ch| ch == '(');
+        self.chars.next();
 
         while let Some(&ch) = self.chars.peek() {
             let token = match ch {
@@ -147,12 +169,37 @@ impl<'a> Parser<'a> {
 
     fn parse_list(&mut self) -> Token {
         self.chars.next();
-        todo!()
+
+        let list = Vec::new();
+
+        // loop {
+        //     match self.chars.peek() {
+        //         Some('a'..='z' | 'A'..='Z' | '_' | '0'..='9') => {
+        //             self.position += 1;
+        //             identifier.push(self.chars.next().unwrap())
+        //         }
+        //         _ => {
+        //             let token = match identifier.as_str() {
+        //                 "true" => Token::Bool(true),
+        //                 "false" => Token::Bool(false),
+        //                 "nil" => Token::Nil,
+        //                 _ => Token::Identifier(identifier),
+        //             };
+
+        //             return token;
+        //         }
+        //     }
+        // }
+
+        Token::List(list)
     }
 
     fn parse_object(&mut self) -> Token {
         self.chars.next();
-        todo!()
+
+        let fields = Vec::new();
+
+        Token::Object(fields)
     }
 }
 

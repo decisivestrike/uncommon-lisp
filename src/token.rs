@@ -17,15 +17,6 @@ pub enum Token {
 }
 
 impl Token {
-    pub fn name(self) -> String {
-        let name = match self {
-            Self::Number(_) => "Number",
-            _ => todo!(),
-        };
-
-        name.to_string()
-    }
-
     pub fn value(self) -> Result<String, RuntimeError> {
         match self {
             Self::Expression(_) => execute(self)?.value(),
@@ -33,8 +24,24 @@ impl Token {
             Self::String(value) | Self::Identifier(value) => Ok(value),
             Self::Bool(value) => Ok(value.to_string()),
             Self::Nil => Ok("Nil".to_string()),
-            Self::List(items) => todo!(),
-            Self::Object(fields) => todo!(),
+            Self::List(items) => {
+                let mut result = Vec::new();
+
+                for item in items.into_iter() {
+                    result.push(item.value()?);
+                }
+
+                Ok(result.join(" ").to_string())
+            }
+            Self::Object(fields) => {
+                let mut result = Vec::new();
+
+                for (key, value) in fields {
+                    result.push(format!("{}:{}\n", key.value()?, value.value()?));
+                }
+
+                Ok(result.join(" ").to_string())
+            }
         }
     }
 }
