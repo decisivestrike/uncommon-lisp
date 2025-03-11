@@ -1,43 +1,13 @@
 use std::collections::HashMap;
-use std::sync::Once;
 
-use crate::{builtins, parser::ParseError, token::Token};
+use crate::{builtins, errors::RuntimeError, token::Token};
+use lazy_static::lazy_static;
 
-pub unsafe fn variables() -> &'static HashMap<String, Token> {
-    static ref VARIABLES: Option<HashMap<String, Token>> = None;
-
-    unsafe {
-        Once::new().call_once(|| {
-            VARIABLES = Some(HashMap::new());
-        });
-    }
-
-    unsafe { &VARIABLES }
+lazy_static! {
+    static ref VARIABLES: HashMap<&'static str, Token> = HashMap::new();
 }
 
-pub fn handle_escapes(s: &str) -> String {
-    let mut result = String::new();
-    let mut chars = s.chars();
-
-    while let Some(c) = chars.next() {
-        if c == '\\' {
-            match chars.next() {
-                Some('n') => result.push('\n'),
-                Some('r') => result.push('\r'),
-                Some('t') => result.push('\t'),
-                Some('\\') => result.push('\\'),
-                Some(c) => result.push(c),
-                None => break,
-            }
-        } else {
-            result.push(c);
-        }
-    }
-
-    result
-}
-
-pub fn execute(token: Token) -> Result<Token, ParseError> {
+pub fn execute(token: Token) -> Result<Token, RuntimeError> {
     match token {
         Token::Expression(tokens) => {
             if tokens.len() == 0 {
@@ -56,9 +26,11 @@ pub fn execute(token: Token) -> Result<Token, ParseError> {
                     "print" => builtins::print(tokens),
                     _ => todo!(),
                 },
-                _ => Err(ParseError::UnknownError)?,
+                _ => Err(RuntimeError::TypeMismatch {
+                    expected: "Identifier".to_string(),
+                })?,
             }
         }
-        _ => Err(ParseError::UnknownError)?,
+        _ => Err(RuntimeError::InvalidExpression),
     }
 }

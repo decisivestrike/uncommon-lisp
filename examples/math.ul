@@ -1,11 +1,10 @@
-This is comment
 (print 
     (sum 
         (sum 2 3 4)
         (mul 2 2 2)
     )
 ) 
-This is also comment
+
 (print
     (sum 
         (div 12 2)

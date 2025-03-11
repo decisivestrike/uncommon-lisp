@@ -1,11 +1,15 @@
+#[allow(dead_code)]
+#[allow(unused_variables)]
 use core::{repl, run_file, tokenize_file};
 use std::{env, error::Error};
 
 mod builtins;
 mod core;
+mod errors;
 mod executer;
 mod parser;
 mod token;
+mod utils;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = env::args().collect();

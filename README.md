@@ -1,6 +1,11 @@
 # Uncommon Lisp
 
-Datetypes:
+> It's looks like Lisp, but it's more JS then Lisp.
+
+Uncommon Lisp основан на выражениях. Выражение это список в круглых скобках, первым элементом которого является функция. Все что не находится внутри выражения, игнорируется интерпретатором и является комментарием.
+
+## Datetypes
+
 - Number
 - String
 - Bool
@@ -8,8 +13,8 @@ Datetypes:
 - List
 - Object
 
-Entities:
-- Expression
+
+## Examples
 
 ```lisp
 # Empty expression
