@@ -1,14 +1,21 @@
 use std::{
+    collections::HashMap,
     io::{Write, stdout},
     vec::IntoIter,
 };
 
+use lazy_static::lazy_static;
+
 use crate::{
     errors::RuntimeError,
-    executer::{evaluate, execute},
+    extractor::evaluate,
     token::Token,
     utils::{ULispType, handle_escapes},
 };
+
+// TODO: Add func arg guard
+
+type ULispFunc = fn(IntoIter<Token>) -> Result<Token, RuntimeError>;
 
 pub fn add(mut tokens: IntoIter<Token>) -> Result<Token, RuntimeError> {
     tokens

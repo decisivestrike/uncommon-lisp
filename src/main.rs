@@ -7,6 +7,7 @@ mod builtins;
 mod core;
 mod errors;
 mod executer;
+mod extractor;
 mod parser;
 mod token;
 mod utils;

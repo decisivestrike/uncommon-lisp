@@ -26,6 +26,7 @@ pub enum RuntimeError {
     },
     TooMuchArgs,
     NotEnoughArgs,
+    UndefinedFunction(String),
 }
 
 impl Display for RuntimeError {

@@ -22,7 +22,6 @@ impl<'a> Parser<'a> {
 
         loop {
             self.skip_before_expression();
-
             match self.parse_expression()? {
                 Some(e) => expressions.push(e),
                 None => break,
@@ -122,12 +121,10 @@ impl<'a> Parser<'a> {
 
     fn parse_string(&mut self) -> Result<Token, ParseError> {
         let mut string = String::new();
-
         self.chars.next();
 
         loop {
             self.position += 1;
-
             match self.chars.peek() {
                 Some('"') => {
                     self.chars.next();

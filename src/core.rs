@@ -19,10 +19,13 @@ pub fn repl() -> io::Result<()> {
         match Parser::new(&input).parse() {
             Ok(expressions) => {
                 for e in expressions {
-                    println!("{:?}", execute(e));
+                    match execute(e) {
+                        Ok(result) => println!("{}", result),
+                        Err(error) => println!("Error: {}", error),
+                    }
                 }
             }
-            Err(error) => println!("{}", error),
+            Err(error) => println!("Error: {}", error),
         }
     }
 
