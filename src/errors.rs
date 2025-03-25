@@ -1,5 +1,7 @@
 use std::{error::Error, fmt::Display};
 
+use crate::utils::ULispType;
+
 #[derive(Debug, PartialEq)]
 pub enum ParseError {
     UnterminatedString { line: u64, position: u64 },
@@ -18,7 +20,10 @@ impl Error for ParseError {}
 #[derive(Debug, PartialEq)]
 pub enum RuntimeError {
     InvalidExpression,
-    TypeMismatch { expected: String },
+    TypeMismatch {
+        expected: ULispType,
+        found: ULispType,
+    },
     TooMuchArgs,
     NotEnoughArgs,
 }

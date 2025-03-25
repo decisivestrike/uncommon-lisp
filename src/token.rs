@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::{errors::RuntimeError, executer::execute};
+use crate::{errors::RuntimeError, executer::execute, utils::ULispType};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Token {
@@ -42,6 +42,19 @@ impl Token {
 
                 Ok(result.join(" ").to_string())
             }
+        }
+    }
+
+    pub fn as_type(&self) -> ULispType {
+        match self {
+            Token::Number(_) => ULispType::Number,
+            Token::String(_) => ULispType::String,
+            Token::Bool(_) => ULispType::Bool,
+            Token::Nil => ULispType::Nil,
+            Token::List(_) => ULispType::List,
+            Token::Object(_) => ULispType::Object,
+            Token::Identifier(_) => ULispType::Identifier,
+            Token::Expression(_) => ULispType::Expression,
         }
     }
 }

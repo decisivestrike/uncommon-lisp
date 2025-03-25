@@ -1,6 +1,5 @@
-use crate::{errors::RuntimeError, executer::execute, token::Token};
-
-pub enum Type {
+#[derive(Debug, PartialEq)]
+pub enum ULispType {
     Number,
     String,
     Bool,
@@ -34,22 +33,3 @@ pub fn handle_escapes(s: &str) -> String {
 
     result
 }
-
-// fn evaluate_number(token: Token) -> Result<f64, RuntimeError> {
-//     match token {
-//         Token::Number(value) => Ok(value),
-//         Token::Expression(expr) => execute(token)?.and_then(|result| match result {
-//             Token::Number(value) => Ok(value),
-//             other => Err(RuntimeError::TypeMismatch {
-//                 expected: "Number".to_string(),
-//                 found: format!("{:?}", other),
-//             }),
-//         }),
-//         other => Err(RuntimeError::TypeMismatch {
-//             expected: "Number".to_string(),
-//             found: format!("{:?}", other),
-//         }),
-//     }
-// }
-
-// fn evaluate<T>()
