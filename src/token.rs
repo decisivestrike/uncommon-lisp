@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::{errors::RuntimeError, executer::execute, utils::ULispType};
+use crate::utils::ULispType;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Token {
@@ -17,34 +17,6 @@ pub enum Token {
 }
 
 impl Token {
-    pub fn value(self) -> Result<String, RuntimeError> {
-        match self {
-            Self::Expression(_) => execute(self)?.value(),
-            Self::Number(value) => Ok(value.to_string()),
-            Self::String(value) | Self::Identifier(value) => Ok(value),
-            Self::Bool(value) => Ok(value.to_string()),
-            Self::Nil => Ok("Nil".to_string()),
-            Self::List(items) => {
-                let mut result = Vec::new();
-
-                for item in items.into_iter() {
-                    result.push(item.value()?);
-                }
-
-                Ok(result.join(" ").to_string())
-            }
-            Self::Object(fields) => {
-                let mut result = Vec::new();
-
-                for (key, value) in fields {
-                    result.push(format!("{}:{}\n", key.value()?, value.value()?));
-                }
-
-                Ok(result.join(" ").to_string())
-            }
-        }
-    }
-
     pub fn as_type(&self) -> ULispType {
         match self {
             Token::Number(_) => ULispType::Number,
@@ -61,6 +33,39 @@ impl Token {
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        let output = match self {
+            Self::Expression(tokens) => format!(
+                "({})",
+                tokens
+                    .iter()
+                    .map(|t| t.to_string())
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            ),
+            Self::Number(v) => v.to_string(),
+            Self::String(v) | Self::Identifier(v) => v.to_string(),
+            Self::Bool(v) => v.to_string(),
+            Self::Nil => "Nil".to_string(),
+            Self::List(items) => {
+                let mut result = Vec::new();
+
+                for item in items.into_iter() {
+                    result.push(item.to_string());
+                }
+
+                result.join(" ").to_string()
+            }
+            Self::Object(fields) => {
+                let mut result = Vec::new();
+
+                for (key, value) in fields {
+                    result.push(format!("{}:{}\n", key.to_string(), value.to_string()));
+                }
+
+                result.join(" ").to_string()
+            }
+        };
+
+        write!(f, "{}", output)
     }
 }

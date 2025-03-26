@@ -20,12 +20,12 @@ pub fn repl() -> io::Result<()> {
             Ok(expressions) => {
                 for e in expressions {
                     match execute(e) {
-                        Ok(result) => println!("{}", result),
-                        Err(error) => println!("Error: {}", error),
+                        Ok(result) => println!("{}", result.to_string()),
+                        Err(error) => println!("RuntimeError: {}", error),
                     }
                 }
             }
-            Err(error) => println!("Error: {}", error),
+            Err(error) => println!("ParseError: {}", error),
         }
     }
 
@@ -38,7 +38,7 @@ pub fn tokenize_file(path: &str) -> Result<(), Box<dyn Error>> {
     Parser::new(&file_content)
         .parse()?
         .into_iter()
-        .for_each(|token| println!("{}", token));
+        .for_each(|token| println!("{:?}", token));
 
     Ok(())
 }

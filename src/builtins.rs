@@ -1,13 +1,11 @@
 use std::{
-    collections::HashMap,
     io::{Write, stdout},
     vec::IntoIter,
 };
 
-use lazy_static::lazy_static;
-
 use crate::{
     errors::RuntimeError,
+    executer::execute,
     extractor::evaluate,
     token::Token,
     utils::{ULispType, handle_escapes},
@@ -15,7 +13,7 @@ use crate::{
 
 // TODO: Add func arg guard
 
-type ULispFunc = fn(IntoIter<Token>) -> Result<Token, RuntimeError>;
+// type ULispFunc = fn(IntoIter<Token>) -> Result<Token, RuntimeError>;
 
 pub fn add(mut tokens: IntoIter<Token>) -> Result<Token, RuntimeError> {
     tokens
@@ -93,9 +91,13 @@ pub fn while_loop(mut tokens: IntoIter<Token>) -> Result<Token, RuntimeError> {
 
 pub fn print(mut tokens: IntoIter<Token>) -> Result<Token, RuntimeError> {
     while let Some(token) = tokens.next() {
-        let value = token.value()?;
+        let value = if token.as_type() == ULispType::Expression {
+            execute(token)?
+        } else {
+            token
+        };
 
-        print!("{} ", handle_escapes(&value));
+        print!("{} ", handle_escapes(&value.to_string()));
     }
 
     stdout().flush().unwrap();

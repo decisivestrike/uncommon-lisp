@@ -8,6 +8,7 @@ impl Extractable for f64 {
     fn extract(token: Token) -> Result<Self, RuntimeError> {
         match token {
             Token::Number(value) => Ok(value),
+            Token::Expression(_) => Self::extract(execute(token)?),
             _ => Err(RuntimeError::TypeMismatch {
                 expected: ULispType::Number,
                 found: token.as_type(),
@@ -18,7 +19,10 @@ impl Extractable for f64 {
 
 impl Extractable for String {
     fn extract(token: Token) -> Result<Self, RuntimeError> {
-        token.value()
+        match token {
+            Token::Expression(_) => Self::extract(execute(token)?),
+            _ => Ok(token.to_string()),
+        }
     }
 }
 
@@ -29,6 +33,7 @@ impl Extractable for bool {
             Token::String(v) => Ok(v.len() > 0),
             Token::Bool(value) => Ok(value),
             Token::Nil => Ok(false),
+            Token::Expression(_) => Self::extract(execute(token)?),
             _ => Err(RuntimeError::TypeMismatch {
                 expected: ULispType::Number,
                 found: token.as_type(),
