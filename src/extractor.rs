@@ -10,6 +10,7 @@ impl Extractable for f64 {
     fn extract(token: Token, scope: &mut Scope) -> Result<Self, RuntimeError> {
         match token {
             Token::Number(value) => Ok(value),
+            Token::Identifier(name) => Self::extract(scope.get_variable(name), scope),
             Token::Expression(_) => Self::extract(execute(token, scope)?, scope),
             _ => Err(RuntimeError::TypeMismatch {
                 expected: ULispType::Number,

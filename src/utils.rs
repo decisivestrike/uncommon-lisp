@@ -1,3 +1,7 @@
+use std::fmt::Display;
+
+use crate::{errors::RuntimeError, token::Token};
+
 #[derive(Debug, PartialEq)]
 pub enum ULispType {
     Number,
@@ -10,6 +14,23 @@ pub enum ULispType {
 
     Identifier,
     Expression,
+}
+
+impl Display for ULispType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let strlit = match self {
+            ULispType::Number => "number",
+            ULispType::String => "string",
+            ULispType::Bool => "bool",
+            ULispType::Nil => "nil",
+            ULispType::List => "list",
+            ULispType::Object => "object",
+            ULispType::Identifier => todo!(),
+            ULispType::Expression => todo!(),
+        };
+
+        write!(f, "{}", strlit)
+    }
 }
 
 pub fn handle_escapes(s: &str) -> String {
@@ -32,4 +53,21 @@ pub fn handle_escapes(s: &str) -> String {
     }
 
     result
+}
+
+pub fn check_types<A, T>(args: A, types: T) -> Result<(), RuntimeError>
+where
+    A: IntoIterator<Item = Token> + Clone,
+    T: IntoIterator<Item = ULispType>,
+{
+    for (arg, t) in args.clone().into_iter().zip(types.into_iter()) {
+        if arg.as_type() != t {
+            return Err(RuntimeError::TypeMismatch {
+                expected: arg.as_type(),
+                found: t,
+            });
+        }
+    }
+
+    Ok(())
 }

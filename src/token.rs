@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{collections::VecDeque, fmt::Display};
 
 use crate::utils::ULispType;
 
@@ -13,7 +13,7 @@ pub enum Token {
     Object(Vec<(Token, Token)>),
 
     Identifier(String),
-    Expression(Vec<Token>),
+    Expression(VecDeque<Token>),
 }
 
 impl Token {

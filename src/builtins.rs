@@ -1,7 +1,4 @@
-use std::{
-    io::{Write, stdout},
-    vec::IntoIter,
-};
+use std::io::{Write, stdout};
 
 use crate::{
     errors::RuntimeError,
@@ -12,10 +9,12 @@ use crate::{
     utils::{ULispType, handle_escapes},
 };
 
-// TODO: Add func arg guard
-
-pub fn add(mut tokens: IntoIter<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn add<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
+where
+    I: IntoIterator<Item = Token>,
+{
     tokens
+        .into_iter()
         .try_fold(0.0, |acc, token| {
             let value: f64 = evaluate(token, scope)?;
             Ok(acc + value)
@@ -23,7 +22,17 @@ pub fn add(mut tokens: IntoIter<Token>, scope: &mut Scope) -> Result<Token, Runt
         .map(Token::Number)
 }
 
-pub fn sub(mut tokens: IntoIter<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn sub<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
+where
+    I: IntoIterator<Item = Token>,
+    I::IntoIter: ExactSizeIterator,
+{
+    let mut tokens = tokens.into_iter();
+
+    if tokens.len() < 2 {
+        return Err(RuntimeError::NotEnoughArgs);
+    }
+
     let base: f64 = evaluate(tokens.next().unwrap(), scope)?;
 
     tokens
@@ -34,8 +43,12 @@ pub fn sub(mut tokens: IntoIter<Token>, scope: &mut Scope) -> Result<Token, Runt
         .map(Token::Number)
 }
 
-pub fn mul(mut tokens: IntoIter<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn mul<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
+where
+    I: IntoIterator<Item = Token>,
+{
     tokens
+        .into_iter()
         .try_fold(1.0, |acc, token| {
             let value: f64 = evaluate(token, scope)?;
             Ok(acc * value)
@@ -43,7 +56,17 @@ pub fn mul(mut tokens: IntoIter<Token>, scope: &mut Scope) -> Result<Token, Runt
         .map(Token::Number)
 }
 
-pub fn div(mut tokens: IntoIter<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn div<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
+where
+    I: IntoIterator<Item = Token>,
+    I::IntoIter: ExactSizeIterator,
+{
+    let mut tokens = tokens.into_iter();
+
+    if tokens.len() < 2 {
+        return Err(RuntimeError::NotEnoughArgs);
+    }
+
     let base: f64 = evaluate(tokens.next().unwrap(), scope)?;
 
     tokens
@@ -54,8 +77,13 @@ pub fn div(mut tokens: IntoIter<Token>, scope: &mut Scope) -> Result<Token, Runt
         .map(Token::Number)
 }
 
-pub fn concat(mut tokens: IntoIter<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn concat<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
+where
+    I: IntoIterator<Item = Token>,
+    I::IntoIter: ExactSizeIterator,
+{
     tokens
+        .into_iter()
         .try_fold(String::new(), |acc, token| {
             let value: String = evaluate(token, scope)?;
             Ok(acc + &value)
@@ -63,7 +91,13 @@ pub fn concat(mut tokens: IntoIter<Token>, scope: &mut Scope) -> Result<Token, R
         .map(Token::String)
 }
 
-pub fn set_variable(mut tokens: IntoIter<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn set_variable<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
+where
+    I: IntoIterator<Item = Token>,
+    I::IntoIter: ExactSizeIterator,
+{
+    let mut tokens = tokens.into_iter();
+
     if tokens.len() < 2 {
         return Err(RuntimeError::NotEnoughArgs);
     }
@@ -72,23 +106,55 @@ pub fn set_variable(mut tokens: IntoIter<Token>, scope: &mut Scope) -> Result<To
         return Err(RuntimeError::TooMuchArgs);
     }
 
-    let name = tokens.next().unwrap();
-
-    if !matches!(name, Token::Identifier(_)) {
-        return Err(RuntimeError::TypeMismatch {
+    let name = match tokens.next().unwrap() {
+        t @ Token::Identifier(_) => t,
+        t => Err(RuntimeError::TypeMismatch {
             expected: ULispType::Identifier,
-            found: name.as_type(),
-        });
-    }
+            found: t.as_type(),
+        })?,
+    };
 
-    let value = tokens.next().unwrap();
+    let value = match tokens.next().unwrap() {
+        Token::Identifier(name) => scope.get_variable(name),
+        t @ Token::Expression(_) => execute(t, scope)?,
+        t => t,
+    };
 
     scope.set_variable(name.to_string(), value);
 
     Ok(scope.get_variable(name.to_string()))
 }
 
-pub fn print(mut tokens: IntoIter<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn get_type<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
+where
+    I: IntoIterator<Item = Token>,
+    I::IntoIter: ExactSizeIterator,
+{
+    let mut tokens = tokens.into_iter();
+
+    if tokens.len() == 0 {
+        return Err(RuntimeError::NotEnoughArgs);
+    }
+
+    if tokens.len() > 1 {
+        return Err(RuntimeError::TooMuchArgs);
+    }
+
+    let value = match tokens.next().unwrap() {
+        Token::Identifier(name) => scope.get_variable(name),
+        t @ Token::Expression(_) => execute(t, scope)?,
+        t => t,
+    };
+
+    Ok(Token::String(value.as_type().to_string()))
+}
+
+pub fn print<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
+where
+    I: IntoIterator<Item = Token>,
+{
+    let mut tokens = tokens.into_iter();
+
     while let Some(token) = tokens.next() {
         let value = match token {
             Token::Identifier(name) => scope.get_variable(name),

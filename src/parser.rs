@@ -1,4 +1,4 @@
-use std::{iter::Peekable, str::Chars};
+use std::{collections::VecDeque, iter::Peekable, str::Chars};
 
 use crate::{errors::ParseError, token::Token};
 
@@ -49,7 +49,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expression(&mut self) -> Result<Option<Token>, ParseError> {
-        let mut tokens = Vec::new();
+        let mut tokens = VecDeque::new();
 
         self.chars.next();
 
@@ -92,7 +92,7 @@ impl<'a> Parser<'a> {
 
             self.position += 1;
 
-            tokens.push(token.unwrap());
+            tokens.push_back(token.unwrap());
         }
 
         if tokens.len() != 0 {
@@ -235,11 +235,14 @@ mod tests {
     fn sum_of_two() {
         let mut parser = Parser::new("(sum 1 1)");
 
-        let result = Token::Expression(vec![
-            Token::Identifier("sum".to_string()),
-            Token::Number(1.0),
-            Token::Number(1.0),
-        ]);
+        let result = Token::Expression(
+            vec![
+                Token::Identifier("sum".to_string()),
+                Token::Number(1.0),
+                Token::Number(1.0),
+            ]
+            .into(),
+        );
 
         assert_eq!(Ok(Some(result)), parser.parse_expression());
     }
@@ -248,17 +251,18 @@ mod tests {
     fn sum_of_sum() {
         let mut parser = Parser::new("(sum (sum 1)(sum 1))");
 
-        let result = Token::Expression(vec![
-            Token::Identifier("sum".to_string()),
-            Token::Expression(vec![
+        let result = Token::Expression(
+            vec![
                 Token::Identifier("sum".to_string()),
-                Token::Number(1.0),
-            ]),
-            Token::Expression(vec![
-                Token::Identifier("sum".to_string()),
-                Token::Number(1.0),
-            ]),
-        ]);
+                Token::Expression(
+                    vec![Token::Identifier("sum".to_string()), Token::Number(1.0)].into(),
+                ),
+                Token::Expression(
+                    vec![Token::Identifier("sum".to_string()), Token::Number(1.0)].into(),
+                ),
+            ]
+            .into(),
+        );
 
         assert_eq!(Ok(Some(result)), parser.parse_expression());
     }

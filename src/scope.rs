@@ -4,6 +4,7 @@ use crate::token::Token;
 
 pub struct Scope {
     variables: HashMap<String, Token>,
+    // functions: HashMap<String, Token>,
 }
 
 impl Scope {
