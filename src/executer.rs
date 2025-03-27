@@ -1,6 +1,6 @@
-use crate::{builtins, errors::RuntimeError, token::Token, utils::ULispType};
+use crate::{builtins, errors::RuntimeError, scope::Scope, token::Token, utils::ULispType};
 
-pub fn execute(token: Token) -> Result<Token, RuntimeError> {
+pub fn execute(token: Token, scope: &mut Scope) -> Result<Token, RuntimeError> {
     match token {
         Token::Expression(tokens) => {
             if tokens.len() == 0 {
@@ -16,14 +16,16 @@ pub fn execute(token: Token) -> Result<Token, RuntimeError> {
 
             match func_id {
                 Token::Identifier(id) => match id.as_str() {
-                    "add" => builtins::add(tokens),
-                    "sub" => builtins::sub(tokens),
-                    "mul" => builtins::mul(tokens),
-                    "div" => builtins::div(tokens),
+                    "add" => builtins::add(tokens, scope),
+                    "sub" => builtins::sub(tokens, scope),
+                    "mul" => builtins::mul(tokens, scope),
+                    "div" => builtins::div(tokens, scope),
 
-                    "concat" => builtins::concat(tokens),
+                    "set" => builtins::set_variable(tokens, scope),
 
-                    "print" => builtins::print(tokens),
+                    "concat" => builtins::concat(tokens, scope),
+
+                    "print" => builtins::print(tokens, scope),
                     // TODO: Find func in hashmap
                     _ => Err(RuntimeError::UndefinedFunction(id)),
                 },
@@ -52,6 +54,6 @@ mod tests {
 
         let expected = Token::Number(2.0);
 
-        assert_eq!(execute(expression).unwrap(), expected);
+        assert_eq!(execute(expression, &mut Scope::new()).unwrap(), expected);
     }
 }

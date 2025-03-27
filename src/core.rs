@@ -3,8 +3,11 @@ use std::{error::Error, fs};
 
 use crate::executer::execute;
 use crate::parser::Parser;
+use crate::scope::Scope;
 
 pub fn repl() -> io::Result<()> {
+    let mut scope = Scope::new();
+
     loop {
         print!("ul> ");
         io::stdout().flush()?;
@@ -19,7 +22,7 @@ pub fn repl() -> io::Result<()> {
         match Parser::new(&input).parse() {
             Ok(expressions) => {
                 for e in expressions {
-                    match execute(e) {
+                    match execute(e, &mut scope) {
                         Ok(result) => println!("{}", result.to_string()),
                         Err(error) => println!("RuntimeError: {}", error),
                     }
@@ -46,9 +49,10 @@ pub fn tokenize_file(path: &str) -> Result<(), Box<dyn Error>> {
 pub fn run_file(path: &str) -> Result<(), Box<dyn Error>> {
     let file_content = fs::read_to_string(path)?;
     let expressions = Parser::new(&file_content).parse()?;
+    let mut scope = Scope::new();
 
     for e in expressions {
-        execute(e)?;
+        execute(e, &mut scope)?;
     }
 
     Ok(())

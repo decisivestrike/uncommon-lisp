@@ -9,6 +9,7 @@ mod errors;
 mod executer;
 mod extractor;
 mod parser;
+mod scope;
 mod token;
 mod utils;
 
