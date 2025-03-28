@@ -14,6 +14,7 @@ pub enum ULispType {
 
     Identifier,
     Expression,
+    Function,
 }
 
 impl Display for ULispType {
@@ -25,15 +26,15 @@ impl Display for ULispType {
             ULispType::Nil => "nil",
             ULispType::List => "list",
             ULispType::Object => "object",
-            ULispType::Identifier => todo!(),
-            ULispType::Expression => todo!(),
+            ULispType::Function => "function",
+            ULispType::Identifier | ULispType::Expression => unreachable!("wtf?"),
         };
 
         write!(f, "{}", strlit)
     }
 }
 
-pub fn handle_escapes(s: &str) -> String {
+pub fn unescape(s: &str) -> String {
     let mut result = String::new();
     let mut chars = s.chars();
 

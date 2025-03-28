@@ -7,6 +7,7 @@ pub enum ParseError {
     UnterminatedString { line: u64, position: u64 },
     UnknownToken { line: u64, position: u64, ch: char },
     IncompleteExpression { line: u64, position: u64 },
+    IncompleteList { line: u64, position: u64 },
 }
 
 impl Display for ParseError {

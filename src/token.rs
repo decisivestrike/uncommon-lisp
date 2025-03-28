@@ -9,7 +9,7 @@ pub enum Token {
     Bool(bool),
     Nil,
 
-    List(Vec<Token>),
+    List(VecDeque<Token>),
     Object(Vec<(Token, Token)>),
 
     Identifier(String),

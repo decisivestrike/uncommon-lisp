@@ -7,27 +7,30 @@ pub fn execute(token: Token, scope: &mut Scope) -> Result<Token, RuntimeError> {
                 return Ok(Token::Nil);
             }
 
-            let func_id = tokens.pop_front().unwrap();
-
-            match func_id {
-                Token::Identifier(id) => match id.as_str() {
+            match tokens.pop_front().unwrap() {
+                Token::Identifier(name) => match name.as_str() {
                     "add" => builtins::add(tokens, scope),
                     "sub" => builtins::sub(tokens, scope),
                     "mul" => builtins::mul(tokens, scope),
                     "div" => builtins::div(tokens, scope),
 
                     "set" => builtins::set_variable(tokens, scope),
-                    "type" => builtins::get_type(tokens, scope),
+                    "typeof" => builtins::typeof_(tokens, scope),
 
                     "concat" => builtins::concat(tokens, scope),
                     "print" => builtins::print(tokens, scope),
-                    // TODO: Find func in hashmap
-                    _ => Err(RuntimeError::UndefinedFunction(id)),
+                    _ => {
+                        let function = scope.get_function(&name);
+                        match function {
+                            Some(name) => todo!(),
+                            None => Err(RuntimeError::UndefinedFunction(name)),
+                        }
+                    }
                 },
 
-                _ => Err(RuntimeError::TypeMismatch {
+                t => Err(RuntimeError::TypeMismatch {
                     expected: ULispType::Expression,
-                    found: func_id.as_type(),
+                    found: t.as_type(),
                 }),
             }
         }

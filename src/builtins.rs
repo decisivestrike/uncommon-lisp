@@ -6,7 +6,7 @@ use crate::{
     extractor::evaluate,
     scope::Scope,
     token::Token,
-    utils::{ULispType, handle_escapes},
+    utils::{ULispType, unescape},
 };
 
 pub fn add<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
@@ -77,20 +77,6 @@ where
         .map(Token::Number)
 }
 
-pub fn concat<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
-where
-    I: IntoIterator<Item = Token>,
-    I::IntoIter: ExactSizeIterator,
-{
-    tokens
-        .into_iter()
-        .try_fold(String::new(), |acc, token| {
-            let value: String = evaluate(token, scope)?;
-            Ok(acc + &value)
-        })
-        .map(Token::String)
-}
-
 pub fn set_variable<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
 where
     I: IntoIterator<Item = Token>,
@@ -115,17 +101,17 @@ where
     };
 
     let value = match tokens.next().unwrap() {
-        Token::Identifier(name) => scope.get_variable(name),
+        Token::Identifier(name) => scope.get_variable(&name),
         t @ Token::Expression(_) => execute(t, scope)?,
         t => t,
     };
 
     scope.set_variable(name.to_string(), value);
 
-    Ok(scope.get_variable(name.to_string()))
+    Ok(scope.get_variable(&name.to_string()))
 }
 
-pub fn get_type<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
+pub fn typeof_<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
 where
     I: IntoIterator<Item = Token>,
     I::IntoIter: ExactSizeIterator,
@@ -141,12 +127,34 @@ where
     }
 
     let value = match tokens.next().unwrap() {
-        Token::Identifier(name) => scope.get_variable(name),
-        t @ Token::Expression(_) => execute(t, scope)?,
-        t => t,
+        Token::Identifier(name) => {
+            if scope.variables.contains_key(&name) {
+                scope.get_variable(&name).as_type()
+            } else if scope.functions.contains_key(&name) {
+                ULispType::Function
+            } else {
+                Token::Nil.as_type()
+            }
+        }
+        t @ Token::Expression(_) => execute(t, scope)?.as_type(),
+        t => t.as_type(),
     };
 
-    Ok(Token::String(value.as_type().to_string()))
+    Ok(Token::String(value.to_string()))
+}
+
+pub fn concat<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
+where
+    I: IntoIterator<Item = Token>,
+    I::IntoIter: ExactSizeIterator,
+{
+    tokens
+        .into_iter()
+        .try_fold(String::new(), |acc, token| {
+            let value: String = evaluate(token, scope)?;
+            Ok(acc + &value)
+        })
+        .map(Token::String)
 }
 
 pub fn print<I>(tokens: I, scope: &mut Scope) -> Result<Token, RuntimeError>
@@ -154,17 +162,21 @@ where
     I: IntoIterator<Item = Token>,
 {
     let mut tokens = tokens.into_iter();
+    let mut parts = Vec::new();
 
     while let Some(token) = tokens.next() {
         let value = match token {
-            Token::Identifier(name) => scope.get_variable(name),
+            Token::Identifier(name) => scope.get_variable(&name),
             Token::Expression(_) => execute(token, scope)?,
             _ => token,
         };
 
-        print!("{} ", handle_escapes(&value.to_string()));
+        parts.push(value.to_string());
     }
 
+    let output = parts.join(" ");
+
+    print!("{}", unescape(&output));
     stdout().flush().unwrap();
 
     Ok(Token::Nil)
