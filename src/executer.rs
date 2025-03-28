@@ -14,6 +14,7 @@ pub fn execute(token: Token, scope: &mut Scope) -> Result<Token, RuntimeError> {
                     "mul" => builtins::mul(tokens, scope),
                     "div" => builtins::div(tokens, scope),
 
+                    //eq ne lt gt le ge
                     "set" => builtins::set_variable(tokens, scope),
                     "typeof" => builtins::typeof_(tokens, scope),
 
