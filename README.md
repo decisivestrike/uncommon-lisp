@@ -13,19 +13,15 @@ Uncommon Lisp основан на выражениях. Выражение эт�
 
 ## Examples
 
-Половина из этого пока не работает
-
-```lisp
-# Empty expression
-() -> Nil
-```
-
 ```lisp
 (var name "Hello")
-(var age (+ 10 10))
+(var age (add 10 10))
 (var list [1 2 3])
 (var person {name:"Alex" age:20})
 (print (typeof person.name))
+
+# Empty expression
+() -> Nil
 
 # while loop
 (set count 10)
@@ -33,20 +29,17 @@ Uncommon Lisp основан на выражениях. Выражение эт�
 	(set count (sub count 1)) 
 	(print count))
 
-
 # Простая функция сложения двух чисел
-(func addTwoNumbers (a b)
+(func addTwoNumbers [a b])
   (add a b))
 
 (addTwoNumbers 5 3)
 
-
 # Рекурсивная функция для вычисления факториала:
-(func factorial (n)
+(func factorial [n]
   (if (<= n 1)
       1
       (* n (factorial (sub n 1)))))
 
 (factorial 5) # Вернет 120
-
 ```
