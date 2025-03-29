@@ -1,10 +1,10 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use crate::token::Token;
 
 pub struct Scope {
     pub variables: HashMap<String, Token>,
-    pub functions: HashMap<String, (Vec<Token>, Token)>,
+    pub functions: HashMap<String, (VecDeque<Token>, Token)>,
 }
 
 impl Scope {
@@ -26,11 +26,11 @@ impl Scope {
         }
     }
 
-    pub fn add_function(&mut self, name: String, args: Vec<Token>, body: Token) {
+    pub fn add_function(&mut self, name: String, args: VecDeque<Token>, body: Token) {
         self.functions.insert(name, (args, body));
     }
 
-    pub fn get_function(&mut self, name: &String) -> Option<(Vec<Token>, Token)> {
+    pub fn get_function(&mut self, name: &String) -> Option<(VecDeque<Token>, Token)> {
         self.functions.get(name).cloned()
     }
 }

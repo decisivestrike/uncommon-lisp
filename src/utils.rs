@@ -1,6 +1,6 @@
-use std::fmt::Display;
+use std::{collections::VecDeque, fmt::Display};
 
-use crate::{errors::RuntimeError, token::Token};
+use crate::{errors::RuntimeError, executer::execute, scope::Scope, token::Token};
 
 #[derive(Debug, PartialEq)]
 pub enum ULispType {
@@ -56,19 +56,43 @@ pub fn unescape(s: &str) -> String {
     result
 }
 
-pub fn check_types<A, T>(args: A, types: T) -> Result<(), RuntimeError>
-where
-    A: IntoIterator<Item = Token> + Clone,
-    T: IntoIterator<Item = ULispType>,
-{
-    for (arg, t) in args.clone().into_iter().zip(types.into_iter()) {
-        if arg.as_type() != t {
-            return Err(RuntimeError::TypeMismatch {
-                expected: arg.as_type(),
-                found: t,
-            });
-        }
-    }
+// pub fn check_types<A, T>(args: A, types: T) -> Result<(), RuntimeError>
+// where
+//     A: IntoIterator<Item = Token> + Clone,
+//     T: IntoIterator<Item = ULispType>,
+// {
+//     for (arg, t) in args.clone().into_iter().zip(types.into_iter()) {
+//         if arg.as_type() != t {
+//             return Err(RuntimeError::TypeMismatch {
+//                 expected: arg.as_type(),
+//                 found: t,
+//             });
+//         }
+//     }
 
-    Ok(())
+//     Ok(())
+// }
+
+pub fn get_token_strict(
+    tokens: &mut VecDeque<Token>,
+    type_: ULispType,
+) -> Result<Token, RuntimeError> {
+    match tokens.pop_front().unwrap() {
+        token if token.as_type() == type_ => Ok(token),
+        token => Err(RuntimeError::TypeMismatch {
+            expected: type_,
+            found: token.as_type(),
+        }),
+    }
+}
+
+pub fn get_value_token(
+    tokens: &mut VecDeque<Token>,
+    scope: &mut Scope,
+) -> Result<Token, RuntimeError> {
+    match tokens.pop_front().unwrap() {
+        Token::Identifier(name) => Ok(scope.get_variable(&name)),
+        t @ Token::Expression(_) => execute(t, scope),
+        t => Ok(t),
+    }
 }

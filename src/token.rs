@@ -10,7 +10,7 @@ pub enum Token {
     Nil,
 
     List(VecDeque<Token>),
-    Object(Vec<(Token, Token)>),
+    Object(VecDeque<(Token, Token)>),
 
     Identifier(String),
     Expression(VecDeque<Token>),

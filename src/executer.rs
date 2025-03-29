@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use crate::{builtins, errors::RuntimeError, scope::Scope, token::Token, utils::ULispType};
 
 pub fn execute(token: Token, scope: &mut Scope) -> Result<Token, RuntimeError> {
@@ -8,25 +10,14 @@ pub fn execute(token: Token, scope: &mut Scope) -> Result<Token, RuntimeError> {
             }
 
             match tokens.pop_front().unwrap() {
-                Token::Identifier(name) => match name.as_str() {
-                    "add" => builtins::add(tokens, scope),
-                    "sub" => builtins::sub(tokens, scope),
-                    "mul" => builtins::mul(tokens, scope),
-                    "div" => builtins::div(tokens, scope),
-
-                    //eq ne lt gt le ge
-                    "set" => builtins::set_variable(tokens, scope),
-                    "typeof" => builtins::typeof_(tokens, scope),
-
-                    "concat" => builtins::concat(tokens, scope),
-                    "print" => builtins::print(tokens, scope),
-                    _ => {
-                        let function = scope.get_function(&name);
-                        match function {
-                            Some(name) => todo!(),
-                            None => Err(RuntimeError::UndefinedFunction(name)),
+                Token::Identifier(name) => match builtins::FUNCTIONS.get(name.as_str()) {
+                    Some(func) => func(tokens, scope),
+                    None => match scope.get_function(&name) {
+                        Some((arg_names, body)) => {
+                            execute(custom_func_call(arg_names, tokens, body), scope)
                         }
-                    }
+                        None => Err(RuntimeError::UndefinedFunction(name)),
+                    },
                 },
 
                 t => Err(RuntimeError::TypeMismatch {
@@ -37,6 +28,20 @@ pub fn execute(token: Token, scope: &mut Scope) -> Result<Token, RuntimeError> {
         }
         _ => Err(RuntimeError::InvalidExpression),
     }
+}
+
+fn custom_func_call(arg_names: VecDeque<Token>, args: VecDeque<Token>, body: Token) -> Token {
+    let Token::Expression(mut expression_parts) = body else {
+        unreachable!()
+    };
+
+    for (name, value) in arg_names.into_iter().zip(args.into_iter()) {
+        while let Some(i) = expression_parts.iter().position(|t| *t == name) {
+            expression_parts[i] = value.clone();
+        }
+    }
+
+    Token::Expression(expression_parts)
 }
 
 #[cfg(test)]

@@ -25,9 +25,14 @@ pub enum RuntimeError {
         expected: ULispType,
         found: ULispType,
     },
-    TooMuchArgs,
-    NotEnoughArgs,
+    NotEnoughArgs {
+        min: usize,
+    },
     UndefinedFunction(String),
+    InvalidArgCount {
+        expected: usize,
+        got: usize,
+    },
 }
 
 impl Display for RuntimeError {
