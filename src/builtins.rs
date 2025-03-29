@@ -90,7 +90,7 @@ pub fn typeof_(mut tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, 
             if scope.variables.contains_key(&name) {
                 scope.get_variable(&name).as_type()
             } else if scope.functions.contains_key(&name) || FUNCTIONS.contains_key(&name) {
-                ULispType::Function
+                ULispType::Expression
             } else {
                 ULispType::Nil
             }
@@ -167,14 +167,19 @@ pub fn concat(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, Runti
 }
 
 pub fn print(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
-    let output: String = tokens
-        .into_iter()
-        .map(|token| match token {
-            Token::Identifier(name) => scope.get_variable(&name).to_string(),
-            _ => token.to_string(),
-        })
-        .collect::<Vec<_>>()
-        .join(" ");
+    let mut parts = Vec::new();
+
+    for token in tokens {
+        let value = match token {
+            Token::Identifier(name) => scope.get_variable(&name),
+            Token::Expression(_) => execute(token, scope)?,
+            _ => token,
+        };
+
+        parts.push(value.to_string());
+    }
+
+    let output = parts.join(" ");
 
     print!("{}", unescape(&output));
     stdout().flush().unwrap();

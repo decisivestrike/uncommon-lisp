@@ -1,2 +1,2 @@
-# Your first program on uncommon lisp
+# Your first program
 (print "Hello, World!\n")

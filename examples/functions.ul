@@ -1,0 +1,2 @@
+(func twoSum [a b] (add a b))
+(print (twoSum 2 3))

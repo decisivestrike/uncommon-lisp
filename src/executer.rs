@@ -70,7 +70,7 @@ mod tests {
     fn greeting() {
         let set_variable = Token::Expression(
             vec![
-                Token::Identifier("set".to_string()),
+                Token::Identifier("var".to_string()),
                 Token::Identifier("name".to_string()),
                 Token::String("Denis".to_string()),
             ]
@@ -121,14 +121,14 @@ mod tests {
     }
 
     #[test]
-    fn set_in_set() {
+    fn var_in_var() {
         let expression = Token::Expression(
             vec![
-                Token::Identifier("set".to_string()),
+                Token::Identifier("var".to_string()),
                 Token::Identifier("anotherName".to_string()),
                 Token::Expression(
                     vec![
-                        Token::Identifier("set".to_string()),
+                        Token::Identifier("var".to_string()),
                         Token::Identifier("name".to_string()),
                         Token::String("Denis".to_string()),
                     ]
@@ -142,5 +142,33 @@ mod tests {
             execute(expression, &mut Scope::new()).unwrap(),
             Token::String("Denis".to_string())
         );
+    }
+
+    #[test]
+    fn get_two() {
+        let mut scope = Scope::new();
+
+        let create_func = Token::Expression(
+            vec![
+                Token::Identifier("func".to_string()),
+                Token::Identifier("getTwo".to_string()),
+                Token::List(vec![].into()),
+                Token::Expression(
+                    vec![
+                        Token::Identifier("add".to_string()),
+                        Token::Number(1.0),
+                        Token::Number(1.0),
+                    ]
+                    .into(),
+                ),
+            ]
+            .into(),
+        );
+
+        _ = execute(create_func, &mut scope);
+
+        let func_call = Token::Expression(vec![Token::Identifier("getTwo".to_string())].into());
+
+        assert_eq!(execute(func_call, &mut scope).unwrap(), Token::Number(2.0));
     }
 }

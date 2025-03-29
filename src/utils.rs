@@ -14,7 +14,6 @@ pub enum ULispType {
 
     Identifier,
     Expression,
-    Function,
 }
 
 impl Display for ULispType {
@@ -26,7 +25,6 @@ impl Display for ULispType {
             ULispType::Nil => "nil",
             ULispType::List => "list",
             ULispType::Object => "object",
-            ULispType::Function => "function",
             ULispType::Identifier | ULispType::Expression => unreachable!("wtf?"),
         };
 

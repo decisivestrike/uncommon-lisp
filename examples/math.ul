@@ -1,16 +1,6 @@
-# This should print 17
+(var a 12)
+(var b 2)
 (print 
-    (add 
-        (add 2 3 4)
-        (mul 2 2 2)
-    )
-) 
-
-# This should print 11 and 120
-(print
-    (add
-        (div 12 2 2)
-        (sub 12 2 2 3)
-    )
-    (mul 1 2 3 4 5)
+    (add a b)(sub a b)(mul a b)(div a b)
 )
+
