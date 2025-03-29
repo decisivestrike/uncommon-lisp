@@ -10,8 +10,7 @@ pub enum ULispType {
     Nil,
 
     List,
-    Object,
-
+    // Object,
     Identifier,
     Expression,
 }
@@ -24,7 +23,7 @@ impl Display for ULispType {
             ULispType::Bool => "bool",
             ULispType::Nil => "nil",
             ULispType::List => "list",
-            ULispType::Object => "object",
+            // ULispType::Object => "object",
             ULispType::Identifier | ULispType::Expression => unreachable!("wtf?"),
         };
 

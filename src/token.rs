@@ -10,8 +10,7 @@ pub enum Token {
     Nil,
 
     List(VecDeque<Token>),
-    Object(VecDeque<(Token, Token)>),
-
+    // Object(VecDeque<(Token, Token)>),
     Identifier(String),
     Expression(VecDeque<Token>),
 }
@@ -24,7 +23,7 @@ impl Token {
             Token::Bool(_) => ULispType::Bool,
             Token::Nil => ULispType::Nil,
             Token::List(_) => ULispType::List,
-            Token::Object(_) => ULispType::Object,
+            // Token::Object(_) => ULispType::Object,
             Token::Identifier(_) => ULispType::Identifier,
             Token::Expression(_) => ULispType::Expression,
         }
@@ -54,16 +53,15 @@ impl Display for Token {
                 }
 
                 result.join(" ").to_string()
-            }
-            Self::Object(fields) => {
-                let mut result = Vec::new();
+            } // Self::Object(fields) => {
+              //     let mut result = Vec::new();
 
-                for (key, value) in fields {
-                    result.push(format!("{}:{}\n", key.to_string(), value.to_string()));
-                }
+              //     for (key, value) in fields {
+              //         result.push(format!("{}:{}\n", key.to_string(), value.to_string()));
+              //     }
 
-                result.join(" ").to_string()
-            }
+              //     result.join(" ").to_string()
+              // }
         };
 
         write!(f, "{}", output)

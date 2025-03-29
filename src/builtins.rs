@@ -22,6 +22,13 @@ lazy_static! {
         ("func", create_function),
         ("typeof", typeof_),
 
+        // Control flow
+        ("if", if_statement),
+        ("ifelse", if_else_statement),
+
+        // Comparing
+        ("eq", is_equal),
+
         // Math
         ("add", add),
         ("sub", sub),
@@ -100,6 +107,64 @@ pub fn typeof_(mut tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, 
     };
 
     Ok(Token::String(type_.to_string()))
+}
+
+pub fn if_statement(mut tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+    if tokens.len() < 2 {
+        return Err(RuntimeError::NotEnoughArgs { min: 2 });
+    }
+
+    let condition: bool = evaluate(tokens.pop_front().unwrap(), scope)?;
+
+    if condition {
+        while tokens.len() != 0 {
+            let e = get_token_strict(&mut tokens, ULispType::Expression)?;
+            execute(e, scope)?;
+        }
+    }
+
+    Ok(Token::Nil)
+}
+
+pub fn if_else_statement(
+    mut tokens: VecDeque<Token>,
+    scope: &mut Scope,
+) -> Result<Token, RuntimeError> {
+    if tokens.len() != 3 {
+        return Err(RuntimeError::InvalidArgCount {
+            expected: 3,
+            got: tokens.len(),
+        });
+    }
+
+    let condition: bool = evaluate(tokens.pop_front().unwrap(), scope)?;
+
+    let first = get_token_strict(&mut tokens, ULispType::Expression)?;
+
+    if condition {
+        execute(first, scope)?;
+    } else {
+        let second = get_token_strict(&mut tokens, ULispType::Expression)?;
+        execute(second, scope)?;
+    }
+
+    Ok(Token::Nil)
+}
+
+pub fn is_equal(mut tokens: VecDeque<Token>, _: &mut Scope) -> Result<Token, RuntimeError> {
+    if tokens.len() < 2 {
+        return Err(RuntimeError::NotEnoughArgs { min: 2 });
+    }
+
+    let base = tokens.pop_front().unwrap();
+
+    for t in tokens {
+        if base != t {
+            return Ok(Token::Bool(false));
+        }
+    }
+
+    Ok(Token::Bool(true))
 }
 
 pub fn add(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
