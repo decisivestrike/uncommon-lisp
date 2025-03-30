@@ -1,8 +1,8 @@
 use std::{collections::VecDeque, fmt::Display};
 
-use crate::utils::ULispType;
+use crate::{errors::RuntimeError, executer::execute, scope::Scope, utils::ULispType};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub enum Token {
     Number(f64),
     String(String),
@@ -27,6 +27,19 @@ impl Token {
             Token::Identifier(_) => ULispType::Identifier,
             Token::Expression(_) => ULispType::Expression,
         }
+    }
+
+    // Expression / Id -> Num / Str / Bool / Nil / List
+    pub fn to_primitive(mut self, scope: &mut Scope) -> Result<Token, RuntimeError> {
+        if self.as_type() == ULispType::Identifier {
+            return Ok(scope.get_variable(&self.to_string()));
+        }
+
+        while self.as_type() == ULispType::Expression {
+            self = execute(self, scope)?;
+        }
+
+        Ok(self)
     }
 }
 

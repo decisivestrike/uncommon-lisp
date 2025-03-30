@@ -28,6 +28,9 @@ pub enum RuntimeError {
     NotEnoughArgs {
         min: usize,
     },
+    TooMuchArgs {
+        max: usize,
+    },
     UndefinedFunction(String),
     InvalidArgCount {
         expected: usize,

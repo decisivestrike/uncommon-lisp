@@ -23,11 +23,18 @@ lazy_static! {
         ("typeof", typeof_),
 
         // Control flow
-        ("if", if_statement),
-        ("ifelse", if_else_statement),
+        ("if", if_then_else),
+        // while
 
         // Comparing
-        ("eq", is_equal),
+        ("eq", equal),
+        ("ne", not_equal),
+
+        ("lt", less_then),
+        ("gt", greater_then),
+
+        ("le", less_or_equal),
+        ("ge", greater_or_equal),
 
         // Math
         ("add", add),
@@ -35,6 +42,7 @@ lazy_static! {
         ("mul", mul),
         ("div", div),
 
+        // Other
         ("concat", concat),
         ("print", print),
     ]
@@ -109,62 +117,79 @@ pub fn typeof_(mut tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, 
     Ok(Token::String(type_.to_string()))
 }
 
-pub fn if_statement(mut tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn if_then_else(mut tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
     if tokens.len() < 2 {
         return Err(RuntimeError::NotEnoughArgs { min: 2 });
     }
 
+    if tokens.len() > 3 {
+        return Err(RuntimeError::TooMuchArgs { max: 3 });
+    }
+
+    let has_else_block = tokens.len() == 3;
     let condition: bool = evaluate(tokens.pop_front().unwrap(), scope)?;
 
-    if condition {
-        while tokens.len() != 0 {
-            let e = get_token_strict(&mut tokens, ULispType::Expression)?;
-            execute(e, scope)?;
-        }
-    }
+    let then_block = tokens.pop_front().unwrap();
+    let else_block = match has_else_block {
+        true => tokens.pop_front().unwrap(),
+        false => Token::Nil,
+    };
 
-    Ok(Token::Nil)
+    Ok(match condition {
+        true => then_block.to_primitive(scope)?,
+        false => else_block.to_primitive(scope)?,
+    })
 }
 
-pub fn if_else_statement(
-    mut tokens: VecDeque<Token>,
-    scope: &mut Scope,
-) -> Result<Token, RuntimeError> {
-    if tokens.len() != 3 {
-        return Err(RuntimeError::InvalidArgCount {
-            expected: 3,
-            got: tokens.len(),
-        });
-    }
-
-    let condition: bool = evaluate(tokens.pop_front().unwrap(), scope)?;
-
-    let first = get_token_strict(&mut tokens, ULispType::Expression)?;
-
-    if condition {
-        execute(first, scope)?;
-    } else {
-        let second = get_token_strict(&mut tokens, ULispType::Expression)?;
-        execute(second, scope)?;
-    }
-
-    Ok(Token::Nil)
-}
-
-pub fn is_equal(mut tokens: VecDeque<Token>, _: &mut Scope) -> Result<Token, RuntimeError> {
+// General
+pub fn compare(mut tokens: VecDeque<Token>, op: &str) -> Result<Token, RuntimeError> {
     if tokens.len() < 2 {
         return Err(RuntimeError::NotEnoughArgs { min: 2 });
     }
+
+    let action: fn(&Token, &Token) -> bool = match op {
+        "==" => |a, b| a == b,
+        "!=" => |a, b| a != b,
+        "<" => |a, b| a < b,
+        ">" => |a, b| a > b,
+        "<=" => |a, b| a <= b,
+        ">=" => |a, b| a >= b,
+        _ => unreachable!(),
+    };
 
     let base = tokens.pop_front().unwrap();
 
     for t in tokens {
-        if base != t {
+        if !action(&base, &t) {
             return Ok(Token::Bool(false));
         }
     }
 
     Ok(Token::Bool(true))
+}
+
+pub fn equal(tokens: VecDeque<Token>, _: &mut Scope) -> Result<Token, RuntimeError> {
+    compare(tokens, "==")
+}
+
+pub fn not_equal(tokens: VecDeque<Token>, _: &mut Scope) -> Result<Token, RuntimeError> {
+    compare(tokens, "!=")
+}
+
+pub fn less_then(tokens: VecDeque<Token>, _: &mut Scope) -> Result<Token, RuntimeError> {
+    compare(tokens, "<")
+}
+
+pub fn greater_then(tokens: VecDeque<Token>, _: &mut Scope) -> Result<Token, RuntimeError> {
+    compare(tokens, ">")
+}
+
+pub fn less_or_equal(tokens: VecDeque<Token>, _: &mut Scope) -> Result<Token, RuntimeError> {
+    compare(tokens, "<=")
+}
+
+pub fn greater_or_equal(tokens: VecDeque<Token>, _: &mut Scope) -> Result<Token, RuntimeError> {
+    compare(tokens, "=>")
 }
 
 pub fn add(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
@@ -235,11 +260,7 @@ pub fn print(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, Runtim
     let mut parts = Vec::new();
 
     for token in tokens {
-        let value = match token {
-            Token::Identifier(name) => scope.get_variable(&name),
-            Token::Expression(_) => execute(token, scope)?,
-            _ => token,
-        };
+        let value = token.to_primitive(scope)?;
 
         parts.push(value.to_string());
     }

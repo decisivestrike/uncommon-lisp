@@ -1,2 +1,10 @@
-(func twoSum [a b] (add a b))
-(print (twoSum 2 3))
+(func factorial [n]
+    (if (le n 1)
+        1
+        (mul n (factorial (sub n 1)))
+    )
+)
+ 
+(print (factorial 5)) # Вернет 120
+
+

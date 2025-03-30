@@ -1,1 +1,4 @@
-(ifelse true (print "It's True!\n")(print "Oh no! Logic is broken :(")))
+(ifelse true 
+	(print "It's True!\n")
+	(print "Oh no! Logic is broken :("))
+)
