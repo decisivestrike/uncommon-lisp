@@ -12,7 +12,7 @@ Uncommon Lisp основан на выражениях. Выражение эт�
 
 ## Examples
 
-```bash
+```csharp
 (var name "Hello")
 (var age (add 10 10))
 (var list [1 2 3])
