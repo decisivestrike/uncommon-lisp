@@ -1,35 +1,6 @@
 use std::{collections::VecDeque, fmt::Display};
 
-use crate::{errors::RuntimeError, executer::execute, scope::Scope, token::Token};
-
-#[derive(Debug, PartialEq)]
-pub enum ULispType {
-    Number,
-    String,
-    Bool,
-    Nil,
-
-    List,
-    // Object,
-    Identifier,
-    Expression,
-}
-
-impl Display for ULispType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let strlit = match self {
-            ULispType::Number => "number",
-            ULispType::String => "string",
-            ULispType::Bool => "bool",
-            ULispType::Nil => "nil",
-            ULispType::List => "list",
-            // ULispType::Object => "object",
-            ULispType::Identifier | ULispType::Expression => unreachable!("wtf?"),
-        };
-
-        write!(f, "{}", strlit)
-    }
-}
+use crate::{errors::RuntimeError, executer::execute, scope::Scope};
 
 pub fn unescape(s: &str) -> String {
     let mut result = String::new();

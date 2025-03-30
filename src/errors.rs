@@ -1,13 +1,28 @@
 use std::{error::Error, fmt::Display};
 
-use crate::utils::ULispType;
-
 #[derive(Debug, PartialEq)]
 pub enum ParseError {
-    UnterminatedString { line: u64, position: u64 },
-    UnknownToken { line: u64, position: u64, ch: char },
-    IncompleteExpression { line: u64, position: u64 },
-    IncompleteList { line: u64, position: u64 },
+    UnterminatedString {
+        line: usize,
+        position: usize,
+    },
+    UnknownToken {
+        line: usize,
+        position: usize,
+        ch: char,
+    },
+    IncompleteExpression {
+        line: usize,
+        position: usize,
+    },
+    IncompleteList {
+        line: usize,
+        position: usize,
+    },
+    ExpectedIdentifier {
+        line: usize,
+        position: usize,
+    },
 }
 
 impl Display for ParseError {

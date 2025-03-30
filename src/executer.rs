@@ -1,32 +1,26 @@
 use std::collections::VecDeque;
 
-use crate::{builtins, errors::RuntimeError, scope::Scope, token::Token, utils::ULispType};
+use crate::{
+    builtins,
+    errors::RuntimeError,
+    scope::Scope,
+    token::{Expression, Identifier, primitive::Primitive},
+    utils::ULispType,
+};
 
-pub fn execute(token: Token, scope: &mut Scope) -> Result<Token, RuntimeError> {
-    match token {
-        Token::Expression(mut tokens) => {
-            if tokens.len() == 0 {
-                return Ok(Token::Nil);
-            }
+pub fn execute(exp: Expression, scope: &mut Scope) -> Result<Primitive, RuntimeError> {
+    if exp.function.is_none() {
+        return Ok(Primitive::Nil);
+    }
 
-            match tokens.pop_front().unwrap() {
-                Token::Identifier(name) => match builtins::FUNCTIONS.get(name.as_str()) {
-                    Some(func) => func(tokens, scope),
-                    None => match scope.get_function(&name) {
-                        Some((arg_names, body)) => {
-                            execute(custom_func_call(arg_names, tokens, body), scope)
-                        }
-                        None => Err(RuntimeError::UndefinedFunction(name)),
-                    },
-                },
+    if let Some(function)
 
-                t => Err(RuntimeError::TypeMismatch {
-                    expected: ULispType::Expression,
-                    found: t.as_type(),
-                }),
-            }
-        }
-        _ => Err(RuntimeError::InvalidExpression),
+    match builtins::FUNCTIONS.get(name.as_str()) {
+        Some(func) => func(tokens, scope),
+        None => match scope.get_function(&name) {
+            Some((arg_names, body)) => execute(custom_func_call(arg_names, tokens, body), scope),
+            None => Err(RuntimeError::UndefinedFunction(name)),
+        },
     }
 }
 

@@ -1,6 +1,6 @@
 use std::collections::{HashMap, VecDeque};
 
-use crate::token::Token;
+use crate::token::{Privitive, Token};
 
 pub struct Scope {
     pub variables: HashMap<String, Token>,
@@ -19,7 +19,7 @@ impl Scope {
         self.variables.insert(name, value);
     }
 
-    pub fn get_variable(&self, name: &String) -> Token {
+    pub fn get_variable(&self, name: &String) -> Privitive {
         match self.variables.get(name) {
             Some(v) => v.clone(),
             None => Token::Nil,
