@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use super::{Datatype, Entity, Value};
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -16,6 +18,10 @@ impl Entity for Primitive {
             Self::Bool(_) => Datatype::Bool,
             Self::Nil => Datatype::Nil,
         }
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

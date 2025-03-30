@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, iter::Peekable, str::Chars};
+use std::{any::Any, collections::VecDeque, iter::Peekable, str::Chars};
 
 use crate::{
     errors::{ParseError, RuntimeError},
@@ -89,27 +89,32 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_expression(&mut self) -> Result<Option<Box<Expression>>, ParseError> {
-        let mut expression = Expression::new(self.line, self.position);
-
+    fn parse_expression(&mut self) -> Result<Option<Expression>, ParseError> {
         self.chars.next();
 
-        match self.chars.peek() {
-            Some('a'..='z' | 'A'..='Z' | '_') => expression.fid = Some(self.parse_identifier()),
+        let fid = match self.chars.peek() {
+            Some('a'..='z' | 'A'..='Z' | '_') => self
+                .parse_identifier()
+                .as_any()
+                .downcast_ref::<Identifier>()
+                .cloned(),
             _ => {
                 return Err(ParseError::ExpectedIdentifier {
                     line: self.line,
                     position: self.position,
                 });
             }
-        }
+        };
+
+        let mut args = VecDeque::new();
 
         while let Some(&ch) = self.chars.peek() {
-            let privitive_value = match ch {
+            let maybe_entity = match ch {
                 ')' => {
                     self.chars.next();
                     return Ok(Some(Expression {
-                        items: primitives,
+                        fid,
+                        args,
                         line: self.line,
                         pos: self.position,
                     }));
@@ -119,10 +124,10 @@ impl<'a> Parser<'a> {
 
             self.position += 1;
 
-            privitive_value.map(|e| primitives.push_back(e));
+            maybe_entity.map(|e| args.push_back(e));
         }
 
-        if primitives.len() != 0 {
+        if args.len() != 0 {
             return Err(ParseError::IncompleteExpression {
                 line: self.line,
                 position: self.position,

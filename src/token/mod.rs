@@ -37,8 +37,7 @@ pub enum Datatype {
 
 pub trait Entity: Any + Debug {
     fn as_type(&self) -> Datatype;
-
-    fn v(&self) -> Self;
+    fn as_any(&self) -> &dyn Any;
 }
 
 pub trait Value: Entity {}
@@ -53,6 +52,10 @@ pub struct List(pub VecDeque<Box<dyn Value>>);
 impl Entity for List {
     fn as_type(&self) -> Datatype {
         Datatype::List
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 
@@ -76,6 +79,10 @@ impl Entity for Identifier {
     fn as_type(&self) -> Datatype {
         Datatype::Identifier
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 impl Raw for Identifier {
@@ -86,7 +93,7 @@ impl Raw for Identifier {
 
 #[derive(Debug)]
 pub struct Expression {
-    pub fid: Option<Box<Identifier>>,
+    pub fid: Option<Identifier>,
     pub args: VecDeque<Box<dyn Entity>>,
     pub line: usize,
     pub pos: usize,
@@ -106,6 +113,10 @@ impl Expression {
 impl Entity for Expression {
     fn as_type(&self) -> Datatype {
         Datatype::Expression
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 
