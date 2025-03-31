@@ -52,14 +52,19 @@ impl<'a> Parser<'a> {
                 self.position = 0;
                 None
             }
-            '(' => self.parse_expression()?,
+            '(' => self
+                .parse_expression()?
+                .map(|e| Box::new(e) as Box<dyn Entity>),
 
-            '[' => self.parse_list()?,
+            '[' => self.parse_list()?.map(|e| Box::new(e) as Box<dyn Entity>),
 
             // '{' => Some(self.parse_object()),
-            '"' => Some(self.parse_string()?),
-            '-' | '0'..='9' => Some(self.parse_number()),
+            '"' => Some(Box::new(self.parse_string()?) as Box<dyn Entity>),
+
+            '-' | '0'..='9' => Some(Box::new(self.parse_number()) as Box<dyn Entity>),
+
             'a'..='z' | 'A'..='Z' | '_' => Some(self.parse_identifier()),
+
             _ => {
                 return Err(ParseError::UnknownToken {
                     line: self.line,
@@ -202,7 +207,7 @@ impl<'a> Parser<'a> {
         let mut list_items = VecDeque::new();
 
         while let Some(&ch) = self.chars.peek() {
-            let token = match ch {
+            let maybe_entity = match ch {
                 ']' => {
                     self.chars.next();
                     return Ok(Some(List(list_items)));
@@ -212,12 +217,10 @@ impl<'a> Parser<'a> {
 
             self.position += 1;
 
-            if token.is_some() {
-                list_items.push_back(token.unwrap());
-            }
+            maybe_entity.map(|e| list_items.push_back(e));
         }
 
-        if list.len() != 0 {
+        if list_items.len() != 0 {
             return Err(ParseError::IncompleteList {
                 line: self.line,
                 position: self.position,
