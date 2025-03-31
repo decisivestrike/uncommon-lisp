@@ -1,8 +1,8 @@
-use std::{any::Any, collections::VecDeque, iter::Peekable, str::Chars};
+use std::{collections::VecDeque, iter::Peekable, str::Chars};
 
 use crate::{
-    errors::{ParseError, RuntimeError},
-    token::{Entity, Expression, Identifier, List, primitive::Primitive},
+    entities::{Entity, Expression, Identifier, List, Primitive, ToEntity},
+    errors::ParseError,
 };
 
 pub struct Parser<'a> {
@@ -34,8 +34,8 @@ impl<'a> Parser<'a> {
         Ok(expressions)
     }
 
-    fn define(&mut self, &ch: &char) -> Result<Option<Box<dyn Entity>>, ParseError> {
-        let result: Option<Box<dyn Entity>> = match ch {
+    fn define(&mut self, &ch: &char) -> Result<Option<Entity>, ParseError> {
+        let result: Option<Entity> = match ch {
             ' ' | '\t' | '\r' => {
                 self.chars.next();
                 None
@@ -52,18 +52,16 @@ impl<'a> Parser<'a> {
                 self.position = 0;
                 None
             }
-            '(' => self
-                .parse_expression()?
-                .map(|e| Box::new(e) as Box<dyn Entity>),
+            '(' => self.parse_expression()?.map(|e| e.to_entity()),
 
-            '[' => self.parse_list()?.map(|e| Box::new(e) as Box<dyn Entity>),
+            '[' => Some(self.parse_list()?.to_entity()),
 
             // '{' => Some(self.parse_object()),
-            '"' => Some(Box::new(self.parse_string()?) as Box<dyn Entity>),
+            '"' => Some(self.parse_string()?.to_entity()),
 
-            '-' | '0'..='9' => Some(Box::new(self.parse_number()) as Box<dyn Entity>),
+            '-' | '0'..='9' => Some(self.parse_number().to_entity()),
 
-            'a'..='z' | 'A'..='Z' | '_' => Some(self.parse_identifier()),
+            'a'..='z' | 'A'..='Z' | '_' => Some(self.parse_identifier_or_keyword()),
 
             _ => {
                 return Err(ParseError::UnknownToken {
@@ -98,11 +96,20 @@ impl<'a> Parser<'a> {
         self.chars.next();
 
         let fid = match self.chars.peek() {
-            Some('a'..='z' | 'A'..='Z' | '_') => self
-                .parse_identifier()
-                .as_any()
-                .downcast_ref::<Identifier>()
-                .cloned(),
+            Some('a'..='z' | 'A'..='Z' | '_') => {
+                let maybe_id = self.parse_identifier_or_keyword();
+
+                match maybe_id {
+                    Entity::Identifier(id) => id,
+                    _ => {
+                        return Err(ParseError::ExpectedIdentifier {
+                            line: self.line,
+                            position: self.position,
+                        });
+                    }
+                }
+            }
+
             _ => {
                 return Err(ParseError::ExpectedIdentifier {
                     line: self.line,
@@ -142,21 +149,21 @@ impl<'a> Parser<'a> {
         Ok(None)
     }
 
-    fn parse_number(&mut self) -> Primitive {
-        let mut num_str = String::new();
+    fn parse_number(&mut self) -> f64 {
+        let mut numeric_string = String::new();
 
         loop {
             match self.chars.peek() {
                 Some('0'..='9' | '.') => {
                     self.position += 1;
-                    num_str.push(self.chars.next().unwrap());
+                    numeric_string.push(self.chars.next().unwrap());
                 }
-                _ => return Primitive::Number(num_str.parse().unwrap()),
+                _ => return numeric_string.parse().unwrap(),
             }
         }
     }
 
-    fn parse_string(&mut self) -> Result<Primitive, ParseError> {
+    fn parse_string(&mut self) -> Result<String, ParseError> {
         let mut string = String::new();
         self.chars.next();
 
@@ -165,7 +172,7 @@ impl<'a> Parser<'a> {
             match self.chars.peek() {
                 Some('"') => {
                     self.chars.next();
-                    return Ok(Primitive::String(string));
+                    return Ok(string);
                 }
                 None | Some('\n') => {
                     return Err(ParseError::UnterminatedString {
@@ -178,7 +185,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_identifier(&mut self) -> Box<dyn Entity> {
+    fn parse_identifier_or_keyword(&mut self) -> Entity {
         let mut identifier = String::new();
 
         loop {
@@ -188,46 +195,40 @@ impl<'a> Parser<'a> {
                     identifier.push(self.chars.next().unwrap())
                 }
                 _ => {
-                    let token: Box<dyn Entity> = match identifier.as_str() {
-                        "true" => Box::new(Primitive::Bool(true)),
-                        "false" => Box::new(Primitive::Bool(false)),
-                        "nil" => Box::new(Primitive::Nil),
-                        _ => Box::new(Identifier(identifier)),
+                    return match identifier.as_str() {
+                        "true" => true.to_entity(),
+                        "false" => false.to_entity(),
+                        "nil" => Primitive::Nil.to_entity(),
+                        _ => Identifier(identifier).to_entity(),
                     };
-
-                    return token;
                 }
             }
         }
     }
 
-    fn parse_list(&mut self) -> Result<Option<List>, ParseError> {
+    fn parse_list(&mut self) -> Result<List, ParseError> {
         self.chars.next();
 
-        let mut list_items = VecDeque::new();
+        let mut list = List::new();
 
         while let Some(&ch) = self.chars.peek() {
             let maybe_entity = match ch {
                 ']' => {
                     self.chars.next();
-                    return Ok(Some(List(list_items)));
+                    return Ok(list);
                 }
                 _ => self.define(&ch)?,
             };
 
             self.position += 1;
 
-            maybe_entity.map(|e| list_items.push_back(e));
+            maybe_entity.map(|e| list.push_back(e.to_value(scope)));
         }
 
-        if list_items.len() != 0 {
-            return Err(ParseError::IncompleteList {
-                line: self.line,
-                position: self.position,
-            });
-        }
-
-        Ok(None)
+        Err(ParseError::IncompleteList {
+            line: self.line,
+            position: self.position,
+        })
     }
 
     // fn parse_object(&mut self) -> Token {

@@ -5,12 +5,12 @@ use std::{env, error::Error};
 
 mod builtins;
 mod core;
+mod entities;
 mod errors;
 mod executer;
 mod extractor;
 mod parser;
 mod scope;
-mod token;
 mod utils;
 
 fn main() -> Result<(), Box<dyn Error>> {

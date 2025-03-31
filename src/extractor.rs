@@ -1,5 +1,5 @@
 use crate::{
-    errors::RuntimeError, executer::execute, scope::Scope, token::Token, utils::ULispType,
+    entities::Token, errors::RuntimeError, executer::execute, scope::Scope, utils::ULispType,
 };
 
 pub trait Extractable: Sized {

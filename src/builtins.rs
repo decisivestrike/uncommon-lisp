@@ -6,11 +6,11 @@ use std::{
 use lazy_static::lazy_static;
 
 use crate::{
+    entities::Token,
     errors::RuntimeError,
     executer::execute,
     extractor::evaluate,
     scope::Scope,
-    token::Token,
     utils::{ULispType, get_token_strict, get_value_token, unescape},
 };
 

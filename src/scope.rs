@@ -1,10 +1,31 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 
-use crate::token::{Privitive, Token};
+use crate::{
+    entities::{Expression, List, Primitive, Value},
+    errors::RuntimeError,
+};
+
+#[derive(Debug, Clone)]
+pub struct Function {
+    pub body: Expression,
+    pub arg_names: List,
+}
+
+impl Function {
+    fn call(mut self, args: List, scope: &mut Scope) -> Result<Value, RuntimeError> {
+        for (name, value) in self.arg_names.iter().zip(args.iter()) {
+            while let Some(i) = self.body.args.iter().position(|t| *t == *name) {
+                self.body.args[i] = value.clone();
+            }
+        }
+
+        self.body.execute(scope)
+    }
+}
 
 pub struct Scope {
-    pub variables: HashMap<String, Token>,
-    pub functions: HashMap<String, (VecDeque<Token>, Token)>,
+    variables: HashMap<String, Value>,
+    functions: HashMap<String, Function>,
 }
 
 impl Scope {
@@ -15,22 +36,22 @@ impl Scope {
         }
     }
 
-    pub fn set_variable(&mut self, name: String, value: Token) {
+    pub fn set_variable(&mut self, name: String, value: Value) {
         self.variables.insert(name, value);
     }
 
-    pub fn get_variable(&self, name: &String) -> Privitive {
+    pub fn get_variable(&self, name: &String) -> Value {
         match self.variables.get(name) {
             Some(v) => v.clone(),
-            None => Token::Nil,
+            None => Primitive::Nil.to_value(),
         }
     }
 
-    pub fn add_function(&mut self, name: String, args: VecDeque<Token>, body: Token) {
-        self.functions.insert(name, (args, body));
+    pub fn add_function(&mut self, name: String, body: Expression, arg_names: List) {
+        self.functions.insert(name, Function { body, arg_names });
     }
 
-    pub fn get_function(&mut self, name: &String) -> Option<(VecDeque<Token>, Token)> {
+    pub fn get_function(&mut self, name: &String) -> Option<Function> {
         self.functions.get(name).cloned()
     }
 }

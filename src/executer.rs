@@ -2,41 +2,41 @@ use std::collections::VecDeque;
 
 use crate::{
     builtins,
+    entities::{Expression, Identifier, primitive::Primitive},
     errors::RuntimeError,
     scope::Scope,
-    token::{Expression, Identifier, primitive::Primitive},
     utils::ULispType,
 };
 
-pub fn execute(exp: Expression, scope: &mut Scope) -> Result<Primitive, RuntimeError> {
-    if exp.function.is_none() {
-        return Ok(Primitive::Nil);
-    }
+// pub fn execute(e: Expression, scope: &mut Scope) -> Result<Primitive, RuntimeError> {
+//     if e.function.is_none() {
+//         return Ok(Primitive::Nil);
+//     }
 
-    if let Some(function)
+//     if let Some(function)
 
-    match builtins::FUNCTIONS.get(name.as_str()) {
-        Some(func) => func(tokens, scope),
-        None => match scope.get_function(&name) {
-            Some((arg_names, body)) => execute(custom_func_call(arg_names, tokens, body), scope),
-            None => Err(RuntimeError::UndefinedFunction(name)),
-        },
-    }
-}
+//     match builtins::FUNCTIONS.get(name.as_str()) {
+//         Some(func) => func(tokens, scope),
+//         None => match scope.get_function(&name) {
+//             Some((arg_names, body)) => execute(custom_func_call(arg_names, tokens, body), scope),
+//             None => Err(RuntimeError::UndefinedFunction(name)),
+//         },
+//     }
+// }
 
-fn custom_func_call(arg_names: VecDeque<Token>, args: VecDeque<Token>, body: Token) -> Token {
-    let Token::Expression(mut expression_parts) = body else {
-        unreachable!()
-    };
+// fn custom_func_call(arg_names: VecDeque<Token>, args: VecDeque<Token>, body: Token) -> Token {
+//     let Token::Expression(mut expression_parts) = body else {
+//         unreachable!()
+//     };
 
-    for (name, value) in arg_names.into_iter().zip(args.into_iter()) {
-        while let Some(i) = expression_parts.iter().position(|t| *t == name) {
-            expression_parts[i] = value.clone();
-        }
-    }
+//     for (name, value) in arg_names.into_iter().zip(args.into_iter()) {
+//         while let Some(i) = expression_parts.iter().position(|t| *t == name) {
+//             expression_parts[i] = value.clone();
+//         }
+//     }
 
-    Token::Expression(expression_parts)
-}
+//     Token::Expression(expression_parts)
+// }
 
 #[cfg(test)]
 mod tests {
