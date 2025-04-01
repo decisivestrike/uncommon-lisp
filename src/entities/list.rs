@@ -15,6 +15,10 @@ impl List {
     {
         List(iterable.into_iter().map(|e| e.to_entity()).collect())
     }
+
+    pub fn get(&mut self) -> Entity {
+        self.pop_front().unwrap()
+    }
 }
 
 impl Deref for List {

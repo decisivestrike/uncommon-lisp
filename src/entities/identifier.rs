@@ -1,5 +1,3 @@
-use crate::extractor::Extractable;
-
 use super::*;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
@@ -32,17 +30,5 @@ impl DerefMut for Identifier {
 impl ToEntity for Identifier {
     fn to_entity(self) -> Entity {
         Entity::Identifier(self)
-    }
-}
-
-impl Extractable for Identifier {
-    fn extract(token: Entity, scope: &mut Scope) -> Result<Self, RuntimeError> {
-        match token {
-            Entity::Identifier(i) => Ok(i),
-            e => Err(RuntimeError::TypeMismatch {
-                expected: Datatype::Identifier,
-                found: e.as_type(),
-            }),
-        }
     }
 }

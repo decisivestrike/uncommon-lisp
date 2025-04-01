@@ -24,8 +24,8 @@ impl UserFunction {
 }
 
 pub struct Scope {
-    variables: HashMap<String, Value>,
-    functions: HashMap<String, UserFunction>,
+    pub variables: HashMap<String, Value>,
+    pub functions: HashMap<String, UserFunction>,
 }
 
 impl Scope {
@@ -47,11 +47,12 @@ impl Scope {
         }
     }
 
-    pub fn add_function(&mut self, name: String, body: Expression, arg_names: List) {
-        self.functions.insert(name, Function { body, arg_names });
+    pub fn add_function(&mut self, name: String, arg_names: List, body: Expression) {
+        self.functions
+            .insert(name, UserFunction { body, arg_names });
     }
 
-    pub fn get_function(&mut self, name: &String) -> Option<Function> {
+    pub fn get_function(&mut self, name: &String) -> Option<UserFunction> {
         self.functions.get(name).cloned()
     }
 }

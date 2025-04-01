@@ -1,168 +1,168 @@
-use std::collections::VecDeque;
+// use std::collections::VecDeque;
 
-use crate::{
-    builtins,
-    entities::{Expression, Identifier, primitive::Primitive},
-    errors::RuntimeError,
-    scope::Scope,
-    utils::ULispType,
-};
+// use crate::{
+//     builtins,
+//     entities::{Expression, Identifier, primitive::Primitive},
+//     errors::RuntimeError,
+//     scope::Scope,
+//     utils::ULispType,
+// };
 
-// pub fn execute(e: Expression, scope: &mut Scope) -> Result<Primitive, RuntimeError> {
-//     if e.function.is_none() {
-//         return Ok(Primitive::Nil);
+// // pub fn execute(e: Expression, scope: &mut Scope) -> Result<Primitive, RuntimeError> {
+// //     if e.function.is_none() {
+// //         return Ok(Primitive::Nil);
+// //     }
+
+// //     if let Some(function)
+
+// //     match builtins::FUNCTIONS.get(name.as_str()) {
+// //         Some(func) => func(tokens, scope),
+// //         None => match scope.get_function(&name) {
+// //             Some((arg_names, body)) => execute(custom_func_call(arg_names, tokens, body), scope),
+// //             None => Err(RuntimeError::UndefinedFunction(name)),
+// //         },
+// //     }
+// // }
+
+// // fn custom_func_call(arg_names: VecDeque<Token>, args: VecDeque<Token>, body: Token) -> Token {
+// //     let Token::Expression(mut expression_parts) = body else {
+// //         unreachable!()
+// //     };
+
+// //     for (name, value) in arg_names.into_iter().zip(args.into_iter()) {
+// //         while let Some(i) = expression_parts.iter().position(|t| *t == name) {
+// //             expression_parts[i] = value.clone();
+// //         }
+// //     }
+
+// //     Token::Expression(expression_parts)
+// // }
+
+// #[cfg(test)]
+// mod tests {
+//     use std::vec;
+
+//     use super::*;
+
+//     #[test]
+//     fn sum_of_two() {
+//         let expression = Token::Expression(
+//             vec![
+//                 Token::Identifier("add".to_string()),
+//                 Token::Number(1.0),
+//                 Token::Number(1.0),
+//             ]
+//             .into(),
+//         );
+
+//         let expected = Token::Number(2.0);
+
+//         assert_eq!(execute(expression, &mut Scope::new()).unwrap(), expected);
 //     }
 
-//     if let Some(function)
+//     #[test]
+//     fn greeting() {
+//         let set_variable = Token::Expression(
+//             vec![
+//                 Token::Identifier("var".to_string()),
+//                 Token::Identifier("name".to_string()),
+//                 Token::String("Denis".to_string()),
+//             ]
+//             .into(),
+//         );
 
-//     match builtins::FUNCTIONS.get(name.as_str()) {
-//         Some(func) => func(tokens, scope),
-//         None => match scope.get_function(&name) {
-//             Some((arg_names, body)) => execute(custom_func_call(arg_names, tokens, body), scope),
-//             None => Err(RuntimeError::UndefinedFunction(name)),
-//         },
+//         let concat = Token::Expression(
+//             vec![
+//                 Token::Identifier("concat".to_string()),
+//                 Token::String("Hello ".to_string()),
+//                 Token::Identifier("name".to_string()),
+//             ]
+//             .into(),
+//         );
+
+//         let mut scope = Scope::new();
+
+//         assert_eq!(
+//             execute(set_variable, &mut scope).unwrap(),
+//             Token::String("Denis".to_string())
+//         );
+
+//         assert_eq!(
+//             execute(concat, &mut scope).unwrap(),
+//             Token::String("Hello Denis".to_string())
+//         );
+//     }
+
+//     #[test]
+//     fn sum_of_sum() {
+//         let expression = Token::Expression(
+//             vec![
+//                 Token::Identifier("add".to_string()),
+//                 Token::Expression(
+//                     vec![Token::Identifier("add".to_string()), Token::Number(1.0)].into(),
+//                 ),
+//                 Token::Expression(
+//                     vec![Token::Identifier("add".to_string()), Token::Number(1.0)].into(),
+//                 ),
+//             ]
+//             .into(),
+//         );
+
+//         assert_eq!(
+//             execute(expression, &mut Scope::new()).unwrap(),
+//             Token::Number(2.0)
+//         );
+//     }
+
+//     #[test]
+//     fn var_in_var() {
+//         let expression = Token::Expression(
+//             vec![
+//                 Token::Identifier("var".to_string()),
+//                 Token::Identifier("anotherName".to_string()),
+//                 Token::Expression(
+//                     vec![
+//                         Token::Identifier("var".to_string()),
+//                         Token::Identifier("name".to_string()),
+//                         Token::String("Denis".to_string()),
+//                     ]
+//                     .into(),
+//                 ),
+//             ]
+//             .into(),
+//         );
+
+//         assert_eq!(
+//             execute(expression, &mut Scope::new()).unwrap(),
+//             Token::String("Denis".to_string())
+//         );
+//     }
+
+//     #[test]
+//     fn get_two() {
+//         let mut scope = Scope::new();
+
+//         let create_func = Token::Expression(
+//             vec![
+//                 Token::Identifier("func".to_string()),
+//                 Token::Identifier("getTwo".to_string()),
+//                 Token::List(vec![].into()),
+//                 Token::Expression(
+//                     vec![
+//                         Token::Identifier("add".to_string()),
+//                         Token::Number(1.0),
+//                         Token::Number(1.0),
+//                     ]
+//                     .into(),
+//                 ),
+//             ]
+//             .into(),
+//         );
+
+//         _ = execute(create_func, &mut scope);
+
+//         let func_call = Token::Expression(vec![Token::Identifier("getTwo".to_string())].into());
+
+//         assert_eq!(execute(func_call, &mut scope).unwrap(), Token::Number(2.0));
 //     }
 // }
-
-// fn custom_func_call(arg_names: VecDeque<Token>, args: VecDeque<Token>, body: Token) -> Token {
-//     let Token::Expression(mut expression_parts) = body else {
-//         unreachable!()
-//     };
-
-//     for (name, value) in arg_names.into_iter().zip(args.into_iter()) {
-//         while let Some(i) = expression_parts.iter().position(|t| *t == name) {
-//             expression_parts[i] = value.clone();
-//         }
-//     }
-
-//     Token::Expression(expression_parts)
-// }
-
-#[cfg(test)]
-mod tests {
-    use std::vec;
-
-    use super::*;
-
-    #[test]
-    fn sum_of_two() {
-        let expression = Token::Expression(
-            vec![
-                Token::Identifier("add".to_string()),
-                Token::Number(1.0),
-                Token::Number(1.0),
-            ]
-            .into(),
-        );
-
-        let expected = Token::Number(2.0);
-
-        assert_eq!(execute(expression, &mut Scope::new()).unwrap(), expected);
-    }
-
-    #[test]
-    fn greeting() {
-        let set_variable = Token::Expression(
-            vec![
-                Token::Identifier("var".to_string()),
-                Token::Identifier("name".to_string()),
-                Token::String("Denis".to_string()),
-            ]
-            .into(),
-        );
-
-        let concat = Token::Expression(
-            vec![
-                Token::Identifier("concat".to_string()),
-                Token::String("Hello ".to_string()),
-                Token::Identifier("name".to_string()),
-            ]
-            .into(),
-        );
-
-        let mut scope = Scope::new();
-
-        assert_eq!(
-            execute(set_variable, &mut scope).unwrap(),
-            Token::String("Denis".to_string())
-        );
-
-        assert_eq!(
-            execute(concat, &mut scope).unwrap(),
-            Token::String("Hello Denis".to_string())
-        );
-    }
-
-    #[test]
-    fn sum_of_sum() {
-        let expression = Token::Expression(
-            vec![
-                Token::Identifier("add".to_string()),
-                Token::Expression(
-                    vec![Token::Identifier("add".to_string()), Token::Number(1.0)].into(),
-                ),
-                Token::Expression(
-                    vec![Token::Identifier("add".to_string()), Token::Number(1.0)].into(),
-                ),
-            ]
-            .into(),
-        );
-
-        assert_eq!(
-            execute(expression, &mut Scope::new()).unwrap(),
-            Token::Number(2.0)
-        );
-    }
-
-    #[test]
-    fn var_in_var() {
-        let expression = Token::Expression(
-            vec![
-                Token::Identifier("var".to_string()),
-                Token::Identifier("anotherName".to_string()),
-                Token::Expression(
-                    vec![
-                        Token::Identifier("var".to_string()),
-                        Token::Identifier("name".to_string()),
-                        Token::String("Denis".to_string()),
-                    ]
-                    .into(),
-                ),
-            ]
-            .into(),
-        );
-
-        assert_eq!(
-            execute(expression, &mut Scope::new()).unwrap(),
-            Token::String("Denis".to_string())
-        );
-    }
-
-    #[test]
-    fn get_two() {
-        let mut scope = Scope::new();
-
-        let create_func = Token::Expression(
-            vec![
-                Token::Identifier("func".to_string()),
-                Token::Identifier("getTwo".to_string()),
-                Token::List(vec![].into()),
-                Token::Expression(
-                    vec![
-                        Token::Identifier("add".to_string()),
-                        Token::Number(1.0),
-                        Token::Number(1.0),
-                    ]
-                    .into(),
-                ),
-            ]
-            .into(),
-        );
-
-        _ = execute(create_func, &mut scope);
-
-        let func_call = Token::Expression(vec![Token::Identifier("getTwo".to_string())].into());
-
-        assert_eq!(execute(func_call, &mut scope).unwrap(), Token::Number(2.0));
-    }
-}

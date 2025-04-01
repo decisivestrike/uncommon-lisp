@@ -1,7 +1,6 @@
 use std::io::{self, Write};
 use std::{error::Error, fs};
 
-use crate::executer::execute;
 use crate::parser::Parser;
 use crate::scope::Scope;
 
@@ -22,7 +21,7 @@ pub fn repl() -> io::Result<()> {
         match Parser::new(&input).parse() {
             Ok(expressions) => {
                 for e in expressions {
-                    match execute(e, &mut scope) {
+                    match e.execute(&mut scope) {
                         Ok(result) => println!("{}", result.to_string()),
                         Err(error) => println!("RuntimeError: {}", error),
                     }
@@ -52,7 +51,7 @@ pub fn run_file(path: &str) -> Result<(), Box<dyn Error>> {
     let mut scope = Scope::new();
 
     for e in expressions {
-        execute(e, &mut scope)?;
+        e.execute(&mut scope)?;
     }
 
     Ok(())

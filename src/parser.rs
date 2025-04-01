@@ -102,6 +102,7 @@ impl<'a> Parser<'a> {
                 match maybe_id {
                     Entity::Identifier(id) => id,
                     _ => {
+                        println!("Keyword?");
                         return Err(ParseError::ExpectedIdentifier {
                             line: self.line,
                             position: self.position,
@@ -110,7 +111,16 @@ impl<'a> Parser<'a> {
                 }
             }
 
+            None => {
+                println!("Okey...");
+                return Err(ParseError::IncompleteExpression {
+                    line: self.line,
+                    position: self.position,
+                });
+            }
+
             _ => {
+                println!("Not Letters?");
                 return Err(ParseError::ExpectedIdentifier {
                     line: self.line,
                     position: self.position,
@@ -134,7 +144,7 @@ impl<'a> Parser<'a> {
                 _ => self.define(&ch)?,
             };
 
-            self.position += 1;
+            // self.position += 1;
 
             maybe_entity.map(|e| args.push_back(e));
         }
@@ -151,6 +161,8 @@ impl<'a> Parser<'a> {
 
     fn parse_number(&mut self) -> f64 {
         let mut numeric_string = String::new();
+
+        // TODO: Update condition
 
         loop {
             match self.chars.peek() {

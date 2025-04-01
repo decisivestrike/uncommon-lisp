@@ -13,12 +13,13 @@ pub struct Expression {
 impl Expression {
     pub fn execute(&self, scope: &mut Scope) -> Result<Value, RuntimeError> {
         let func_id = self.fid.as_str();
+        let args = self.args.clone();
 
         match builtins::FUNCTIONS.get(func_id) {
-            Some(func) => func(self.args, scope),
+            Some(func) => func.0(args, scope),
 
             None => match scope.get_function(&func_id.to_string()) {
-                Some(f) => f.call(self.args, scope),
+                Some(f) => f.call(args, scope),
                 None => Err(RuntimeError::UndefinedFunction(func_id.to_string())),
             },
         }

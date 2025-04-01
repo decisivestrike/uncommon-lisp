@@ -7,8 +7,6 @@ mod builtins;
 mod core;
 mod entities;
 mod errors;
-mod executer;
-mod extractor;
 mod parser;
 mod scope;
 mod utils;
