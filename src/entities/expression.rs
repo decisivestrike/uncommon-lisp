@@ -1,16 +1,27 @@
+use crate::builtins;
+
 use super::*;
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
 pub struct Expression {
     pub fid: Identifier,
-    pub args: VecDeque<Entity>,
+    pub args: List,
     pub line: usize,
     pub pos: usize,
 }
 
 impl Expression {
     pub fn execute(&self, scope: &mut Scope) -> Result<Value, RuntimeError> {
-        todo!()
+        let func_id = self.fid.as_str();
+
+        match builtins::FUNCTIONS.get(func_id) {
+            Some(func) => func(self.args, scope),
+
+            None => match scope.get_function(&func_id.to_string()) {
+                Some(f) => f.call(self.args, scope),
+                None => Err(RuntimeError::UndefinedFunction(func_id.to_string())),
+            },
+        }
     }
 }
 
@@ -19,18 +30,3 @@ impl ToEntity for Expression {
         Entity::Expression(self)
     }
 }
-
-
-pub fn execute(e: Expression, scope: &mut Scope) -> Result<Primitive, RuntimeError> {
-
-    if let Some(function)
-
-    match builtins::FUNCTIONS.get(name.as_str()) {
-        Some(func) => func(tokens, scope),
-        None => match scope.get_function(&name) {
-            Some((arg_names, body)) => execute(custom_func_call(arg_names, tokens, body), scope),
-            None => Err(RuntimeError::UndefinedFunction(name)),
-        },
-    }
-}
-

@@ -1,11 +1,19 @@
 use super::*;
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
 pub struct List(pub VecDeque<Entity>);
 
 impl List {
     pub fn new() -> Self {
         List(VecDeque::new())
+    }
+
+    pub fn from<C, I>(iterable: C) -> Self
+    where
+        C: IntoIterator<Item = I>,
+        I: ToEntity,
+    {
+        List(iterable.into_iter().map(|e| e.to_entity()).collect())
     }
 }
 

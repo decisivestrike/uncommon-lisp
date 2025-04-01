@@ -8,6 +8,7 @@ pub use expression::Expression;
 pub use identifier::Identifier;
 pub use list::List;
 pub use primitive::Primitive;
+pub use value::Value;
 
 use crate::{errors::RuntimeError, scope::Scope};
 
@@ -15,6 +16,24 @@ mod expression;
 mod identifier;
 mod list;
 mod primitive;
+mod value;
+
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub enum Entity {
+    Value(Value),
+    Identifier(Identifier),
+    Expression(Expression),
+}
+
+impl Entity {
+    pub fn to_value(self, scope: &mut Scope) -> Result<Value, RuntimeError> {
+        match self {
+            Entity::Value(v) => Ok(v),
+            Entity::Identifier(id) => Ok(id.value_from(scope)),
+            Entity::Expression(e) => e.execute(scope),
+        }
+    }
+}
 
 pub trait ToEntity {
     fn to_entity(self) -> Entity;
@@ -38,28 +57,8 @@ impl ToEntity for bool {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub enum Value {
-    Primitive(Primitive),
-    List(List),
-    Object,
-}
-
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub enum Entity {
-    Value(Value),
-    Identifier(Identifier),
-    Expression(Expression),
-}
-
-impl Entity {
-    pub fn to_value(self, scope: &mut Scope) -> Result<Value, RuntimeError> {
-        match self {
-            Entity::Value(v) => Ok(v),
-            Entity::Identifier(id) => Ok(id.value_from(scope)),
-            Entity::Expression(e) => e.execute(scope),
-        }
-    }
+pub trait AsType {
+    fn as_type(&self) -> Datatype;
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]

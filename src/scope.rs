@@ -6,13 +6,13 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-pub struct Function {
+pub struct UserFunction {
     pub body: Expression,
     pub arg_names: List,
 }
 
-impl Function {
-    fn call(mut self, args: List, scope: &mut Scope) -> Result<Value, RuntimeError> {
+impl UserFunction {
+    pub fn call(mut self, args: List, scope: &mut Scope) -> Result<Value, RuntimeError> {
         for (name, value) in self.arg_names.iter().zip(args.iter()) {
             while let Some(i) = self.body.args.iter().position(|t| *t == *name) {
                 self.body.args[i] = value.clone();
@@ -25,7 +25,7 @@ impl Function {
 
 pub struct Scope {
     variables: HashMap<String, Value>,
-    functions: HashMap<String, Function>,
+    functions: HashMap<String, UserFunction>,
 }
 
 impl Scope {

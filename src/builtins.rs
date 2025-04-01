@@ -1,24 +1,24 @@
 use std::{
-    collections::{HashMap, VecDeque},
+    collections::HashMap,
     io::{Write, stdout},
 };
 
 use lazy_static::lazy_static;
 
 use crate::{
-    entities::Token,
+    entities::{Identifier, List, Primitive, Value},
     errors::RuntimeError,
-    executer::execute,
     extractor::evaluate,
     scope::Scope,
-    utils::{ULispType, get_token_strict, get_value_token, unescape},
+    utils::{get_token_strict, unescape},
 };
 
-type BuiltinFunc = fn(VecDeque<Token>, &mut Scope) -> Result<Token, RuntimeError>;
+#[derive(Debug, Hash, PartialEq, Eq)]
+pub struct BuiltinFunc(fn(List, &mut Scope) -> Result<Value, RuntimeError>);
 
 lazy_static! {
     pub static ref FUNCTIONS: HashMap<String, BuiltinFunc> = [
-        ("var", create_variable as BuiltinFunc),
+        ("var", create_variable as fn(List, &mut Scope) -> Result<Value, RuntimeError>),
         ("func", create_function),
         ("typeof", typeof_),
 
@@ -47,33 +47,27 @@ lazy_static! {
         ("print", print),
     ]
     .into_iter()
-    .map(|(k, v)| (k.to_string(), v))
+    .map(|(k, v)| (k.to_string(), BuiltinFunc(v)))
     .collect();
 }
 
-pub fn create_variable(
-    mut tokens: VecDeque<Token>,
-    scope: &mut Scope,
-) -> Result<Token, RuntimeError> {
-    if tokens.len() != 2 {
+pub fn create_variable(mut args: List, scope: &mut Scope) -> Result<Value, RuntimeError> {
+    if args.len() != 2 {
         return Err(RuntimeError::InvalidArgCount {
             expected: 2,
-            got: tokens.len(),
+            got: args.len(),
         });
     }
 
-    let name = get_token_strict(&mut tokens, ULispType::Identifier)?;
-    let value = get_value_token(&mut tokens, scope)?;
+    let name: Identifier = evaluate(args.pop_front().unwrap(), scope)?;
+    let value: Value = args.pop_front().unwrap().to_value(scope)?;
 
     scope.set_variable(name.to_string(), value);
 
     Ok(scope.get_variable(&name.to_string()))
 }
 
-pub fn create_function(
-    mut tokens: VecDeque<Token>,
-    scope: &mut Scope,
-) -> Result<Token, RuntimeError> {
+pub fn create_function(mut tokens: List, scope: &mut Scope) -> Result<Value, RuntimeError> {
     if tokens.len() != 3 {
         return Err(RuntimeError::InvalidArgCount {
             expected: 3,
@@ -89,10 +83,10 @@ pub fn create_function(
 
     scope.add_function(name.to_string(), args, body);
 
-    return Ok(Token::Nil);
+    return Ok(Primitive::Nil.to_value());
 }
 
-pub fn typeof_(mut tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn typeof_(mut tokens: List, scope: &mut Scope) -> Result<Value, RuntimeError> {
     if tokens.len() != 1 {
         return Err(RuntimeError::InvalidArgCount {
             expected: 1,
@@ -117,7 +111,7 @@ pub fn typeof_(mut tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, 
     Ok(Token::String(type_.to_string()))
 }
 
-pub fn if_then_else(mut tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn if_then_else(mut tokens: List, scope: &mut Scope) -> Result<Value, RuntimeError> {
     if tokens.len() < 2 {
         return Err(RuntimeError::NotEnoughArgs { min: 2 });
     }
@@ -142,7 +136,7 @@ pub fn if_then_else(mut tokens: VecDeque<Token>, scope: &mut Scope) -> Result<To
 }
 
 // General
-pub fn compare(mut tokens: VecDeque<Token>, op: &str) -> Result<Token, RuntimeError> {
+pub fn compare(mut tokens: List, op: &str) -> Result<Value, RuntimeError> {
     if tokens.len() < 2 {
         return Err(RuntimeError::NotEnoughArgs { min: 2 });
     }
@@ -168,41 +162,41 @@ pub fn compare(mut tokens: VecDeque<Token>, op: &str) -> Result<Token, RuntimeEr
     Ok(Token::Bool(true))
 }
 
-pub fn equal(tokens: VecDeque<Token>, _: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn equal(tokens: List, _: &mut Scope) -> Result<Token, RuntimeError> {
     compare(tokens, "==")
 }
 
-pub fn not_equal(tokens: VecDeque<Token>, _: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn not_equal(tokens: List, _: &mut Scope) -> Result<Token, RuntimeError> {
     compare(tokens, "!=")
 }
 
-pub fn less_then(tokens: VecDeque<Token>, _: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn less_then(tokens: List, _: &mut Scope) -> Result<Token, RuntimeError> {
     compare(tokens, "<")
 }
 
-pub fn greater_then(tokens: VecDeque<Token>, _: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn greater_then(tokens: List, _: &mut Scope) -> Result<Token, RuntimeError> {
     compare(tokens, ">")
 }
 
-pub fn less_or_equal(tokens: VecDeque<Token>, _: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn less_or_equal(tokens: List, _: &mut Scope) -> Result<Token, RuntimeError> {
     compare(tokens, "<=")
 }
 
-pub fn greater_or_equal(tokens: VecDeque<Token>, _: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn greater_or_equal(tokens: List, _: &mut Scope) -> Result<Token, RuntimeError> {
     compare(tokens, "=>")
 }
 
-pub fn add(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn add(tokens: List, scope: &mut Scope) -> Result<Value, RuntimeError> {
     tokens
         .into_iter()
         .try_fold(0.0, |acc, token| {
             let value: f64 = evaluate(token, scope)?;
             Ok(acc + value)
         })
-        .map(Token::Number)
+        .map(|v| Primitive::Number(v).to_value())
 }
 
-pub fn sub(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn sub(tokens: List, scope: &mut Scope) -> Result<Value, RuntimeError> {
     let mut tokens = tokens.into_iter();
 
     if tokens.len() < 2 {
@@ -216,20 +210,20 @@ pub fn sub(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeE
             let value: f64 = evaluate(token, scope)?;
             Ok(acc - value)
         })
-        .map(Token::Number)
+        .map(|v| Primitive::Number(v).to_value())
 }
 
-pub fn mul(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn mul(tokens: List, scope: &mut Scope) -> Result<Value, RuntimeError> {
     tokens
         .into_iter()
         .try_fold(1.0, |acc, token| {
             let value: f64 = evaluate(token, scope)?;
             Ok(acc * value)
         })
-        .map(Token::Number)
+        .map(|v| Primitive::Number(v).to_value())
 }
 
-pub fn div(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn div(tokens: List, scope: &mut Scope) -> Result<Value, RuntimeError> {
     let mut tokens = tokens.into_iter();
 
     if tokens.len() < 2 {
@@ -246,21 +240,21 @@ pub fn div(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeE
         .map(Token::Number)
 }
 
-pub fn concat(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn concat(tokens: List, scope: &mut Scope) -> Result<Value, RuntimeError> {
     tokens
         .into_iter()
         .try_fold(String::new(), |acc, token| {
             let value: String = evaluate(token, scope)?;
             Ok(acc + &value)
         })
-        .map(Token::String)
+        .map(|v| Primitive::String(v).to_value())
 }
 
-pub fn print(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, RuntimeError> {
+pub fn print(tokens: List, scope: &mut Scope) -> Result<Value, RuntimeError> {
     let mut parts = Vec::new();
 
-    for token in tokens {
-        let value = token.to_primitive(scope)?;
+    for token in tokens.0 {
+        let value = token.to_value(scope)?;
 
         parts.push(value.to_string());
     }
@@ -270,5 +264,5 @@ pub fn print(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, Runtim
     print!("{}", unescape(&output));
     stdout().flush().unwrap();
 
-    Ok(Token::Nil)
+    Ok(Primitive::Nil.to_value())
 }

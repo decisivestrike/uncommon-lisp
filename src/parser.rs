@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, iter::Peekable, str::Chars};
+use std::{iter::Peekable, str::Chars};
 
 use crate::{
     entities::{Entity, Expression, Identifier, List, Primitive, ToEntity},
@@ -118,7 +118,7 @@ impl<'a> Parser<'a> {
             }
         };
 
-        let mut args = VecDeque::new();
+        let mut args = List::new();
 
         while let Some(&ch) = self.chars.peek() {
             let maybe_entity = match ch {
@@ -222,7 +222,7 @@ impl<'a> Parser<'a> {
 
             self.position += 1;
 
-            maybe_entity.map(|e| list.push_back(e.to_value(scope)));
+            maybe_entity.map(|e| list.push_back(e));
         }
 
         Err(ParseError::IncompleteList {
@@ -246,7 +246,7 @@ mod tests {
     fn number() {
         let mut parser = Parser::new("123.456");
 
-        let result = Token::Number(123.456);
+        let result = 123.456;
 
         assert_eq!(result, parser.parse_number());
     }
@@ -255,7 +255,7 @@ mod tests {
     fn string() {
         let mut parser = Parser::new("\"Hello\"");
 
-        let result = Token::String("Hello".to_string());
+        let result = "Hello".to_string();
 
         assert_eq!(result, parser.parse_string().unwrap());
     }
@@ -264,23 +264,20 @@ mod tests {
     fn bool() {
         let mut parser = Parser::new("true");
 
-        let result = Token::Bool(true);
+        let result = Primitive::Bool(true).to_entity();
 
-        assert_eq!(result, parser.parse_identifier());
+        assert_eq!(result, parser.parse_identifier_or_keyword());
     }
 
     #[test]
     fn sum_of_two() {
         let mut parser = Parser::new("(sum 1 1)");
 
-        let result = Token::Expression(
-            vec![
-                Token::Identifier("sum".to_string()),
-                Token::Number(1.0),
-                Token::Number(1.0),
-            ]
-            .into(),
-        );
+        let result = Expression {
+            fid: Identifier("sum".to_string()),
+            args: List::from([Primitive::Number(1.0), Primitive::Number(1.0)]),
+            ..Default::default()
+        };
 
         assert_eq!(Ok(Some(result)), parser.parse_expression());
     }
@@ -289,18 +286,22 @@ mod tests {
     fn sum_of_sum() {
         let mut parser = Parser::new("(sum (sum 1)(sum 1))");
 
-        let result = Token::Expression(
-            vec![
-                Token::Identifier("sum".to_string()),
-                Token::Expression(
-                    vec![Token::Identifier("sum".to_string()), Token::Number(1.0)].into(),
-                ),
-                Token::Expression(
-                    vec![Token::Identifier("sum".to_string()), Token::Number(1.0)].into(),
-                ),
-            ]
-            .into(),
-        );
+        let result = Expression {
+            fid: Identifier::new("sum"),
+            args: List::from([
+                Expression {
+                    fid: Identifier::new("sum"),
+                    args: List::from([Primitive::Number(1.0)]),
+                    ..Default::default()
+                },
+                Expression {
+                    fid: Identifier::new("sum"),
+                    args: List::from([Primitive::Number(1.0)]),
+                    ..Default::default()
+                },
+            ]),
+            ..Default::default()
+        };
 
         assert_eq!(Ok(Some(result)), parser.parse_expression());
     }
