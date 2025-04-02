@@ -12,7 +12,7 @@ impl<'a> Parser<'a> {
     pub fn new(input: &'a str) -> Self {
         Self {
             chars: input.trim().chars().peekable(),
-            line: 0,
+            line: 1,
             position: 0,
         }
     }

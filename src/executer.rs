@@ -14,6 +14,7 @@ pub fn execute(token: Token, scope: &mut Scope) -> Result<Token, RuntimeError> {
                     Some(func) => func(tokens, scope),
                     None => match scope.get_function(&name) {
                         Some((arg_names, body)) => {
+                            println!("execute");
                             execute(custom_func_call(arg_names, tokens, body), scope)
                         }
                         None => Err(RuntimeError::UndefinedFunction(name)),
@@ -31,11 +32,40 @@ pub fn execute(token: Token, scope: &mut Scope) -> Result<Token, RuntimeError> {
 }
 
 fn custom_func_call(arg_names: VecDeque<Token>, args: VecDeque<Token>, body: Token) -> Token {
+    println!("custom func call");
     let Token::Expression(mut expression_parts) = body else {
         unreachable!()
     };
 
-    for (name, value) in arg_names.into_iter().zip(args.into_iter()) {
+    for (name, value) in arg_names.clone().into_iter().zip(args.clone().into_iter()) {
+        for (i, inner) in expression_parts.clone().iter_mut().enumerate() {
+            if inner.as_type() == ULispType::Expression {
+                println!("call replace {} {}", i, name);
+                expression_parts[i] = replace_in(inner.clone(), args.clone(), arg_names.clone());
+            }
+        }
+
+        while let Some(i) = expression_parts.iter().position(|t| *t == name) {
+            expression_parts[i] = value.clone();
+        }
+    }
+
+    println!("{:?}", expression_parts);
+    Token::Expression(expression_parts)
+}
+
+fn replace_in(maybe_expression: Token, args: VecDeque<Token>, arg_names: VecDeque<Token>) -> Token {
+    let Token::Expression(mut expression_parts) = maybe_expression else {
+        unreachable!()
+    };
+
+    for (name, value) in arg_names.clone().into_iter().zip(args.clone().into_iter()) {
+        for (i, inner) in expression_parts.clone().iter_mut().enumerate() {
+            if inner.as_type() == ULispType::Expression {
+                expression_parts[i] = replace_in(inner.clone(), args.clone(), arg_names.clone());
+            }
+        }
+
         while let Some(i) = expression_parts.iter().position(|t| *t == name) {
             expression_parts[i] = value.clone();
         }
