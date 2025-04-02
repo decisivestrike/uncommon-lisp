@@ -1,33 +1,32 @@
 use std::collections::VecDeque;
 
-use crate::{builtins, errors::RuntimeError, scope::Scope, token::Token, utils::ULispType};
+use crate::{builtins, errors::RuntimeError, scope::Scope, token::Token};
 
 pub fn execute(token: Token, scope: &mut Scope) -> Result<Token, RuntimeError> {
-    match token {
-        Token::Expression(mut tokens) => {
-            if tokens.len() == 0 {
-                return Ok(Token::Nil);
-            }
-
-            match tokens.pop_front().unwrap() {
-                Token::Identifier(name) => match builtins::FUNCTIONS.get(name.as_str()) {
-                    Some(func) => func(tokens, scope),
-                    None => match scope.get_function(&name) {
-                        Some((arg_names, body)) => {
-                            println!("execute");
-                            execute(custom_func_call(arg_names, tokens, body), scope)
-                        }
-                        None => Err(RuntimeError::UndefinedFunction(name)),
-                    },
-                },
-
-                t => Err(RuntimeError::TypeMismatch {
-                    expected: ULispType::Expression,
-                    found: t.as_type(),
-                }),
-            }
+    if let Token::Expression(mut tokens) = token {
+        if tokens.len() == 0 {
+            return Ok(Token::Nil);
         }
-        _ => Err(RuntimeError::InvalidExpression),
+
+        match tokens.pop_front().unwrap() {
+            Token::Identifier(name) => match builtins::FUNCTIONS.get(name.as_str()) {
+                Some(func) => func(tokens, scope),
+                None => match scope.get_function(&name) {
+                    Some((arg_names, body)) => {
+                        println!("execute");
+                        execute(custom_func_call(arg_names, tokens, body), scope)
+                    }
+                    None => Err(RuntimeError::UndefinedFunction(name)),
+                },
+            },
+
+            t => Err(RuntimeError::TypeMismatch {
+                expected: ULispType::Expression,
+                found: t.as_type().to_string(),
+            }),
+        }
+    } else {
+        Err(RuntimeError::InvalidExpression)
     }
 }
 
@@ -39,7 +38,7 @@ fn custom_func_call(arg_names: VecDeque<Token>, args: VecDeque<Token>, body: Tok
 
     for (name, value) in arg_names.clone().into_iter().zip(args.clone().into_iter()) {
         for (i, inner) in expression_parts.clone().iter_mut().enumerate() {
-            if inner.as_type() == ULispType::Expression {
+            if let Token::Expression(inner_parts) = inner {
                 println!("call replace {} {}", i, name);
                 expression_parts[i] = replace_in(inner.clone(), args.clone(), arg_names.clone());
             }

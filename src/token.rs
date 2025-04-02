@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, fmt::Display};
 
-use crate::{errors::RuntimeError, executer::execute, scope::Scope, utils::ULispType};
+use crate::{errors::RuntimeError, executer::execute, extractor::Extractable, scope::Scope};
 
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub enum Token {
@@ -16,30 +16,34 @@ pub enum Token {
 }
 
 impl Token {
-    pub fn as_type(&self) -> ULispType {
+    // Expression / Id -> Num / Str / Bool / Nil / List
+    pub fn to_value(self, scope: &mut Scope) -> Result<Token, RuntimeError> {
+        Ok(match self {
+            Token::Identifier(_) => scope.get_variable(&self.to_string()),
+            Token::Expression(_) => execute(self, scope)?,
+            _ => self,
+        })
+    }
+
+    pub fn as_type(&self) -> &str {
         match self {
-            Token::Number(_) => ULispType::Number,
-            Token::String(_) => ULispType::String,
-            Token::Bool(_) => ULispType::Bool,
-            Token::Nil => ULispType::Nil,
-            Token::List(_) => ULispType::List,
-            // Token::Object(_) => ULispType::Object,
-            Token::Identifier(_) => ULispType::Identifier,
-            Token::Expression(_) => ULispType::Expression,
+            Token::Number(_) => "number",
+            Token::String(_) => "string",
+            Token::Bool(_) => "bool",
+            Token::Nil => "nil",
+            Token::List(_) => "list",
+            // ULispType::Object => "object",
+            Token::Identifier(_) => "identifier",
+            Token::Expression(_) => "expression",
         }
     }
 
-    // Expression / Id -> Num / Str / Bool / Nil / List
-    pub fn to_primitive(mut self, scope: &mut Scope) -> Result<Token, RuntimeError> {
-        if self.as_type() == ULispType::Identifier {
-            return Ok(scope.get_variable(&self.to_string()));
+    pub fn evaluate<T: Extractable>(mut self, scope: &mut Scope) -> Result<T, RuntimeError> {
+        if matches!(self, Token::Identifier(_) | Token::Expression(_)) {
+            self = self.to_value(scope)?;
         }
 
-        while self.as_type() == ULispType::Expression {
-            self = execute(self, scope)?;
-        }
-
-        Ok(self)
+        T::extract(self, scope)
     }
 }
 
@@ -57,7 +61,7 @@ impl Display for Token {
             Self::Number(v) => v.to_string(),
             Self::String(v) | Self::Identifier(v) => v.to_string(),
             Self::Bool(v) => v.to_string(),
-            Self::Nil => "Nil".to_string(),
+            Self::Nil => "nil".to_string(),
             Self::List(items) => {
                 let mut result = Vec::new();
 
@@ -66,15 +70,7 @@ impl Display for Token {
                 }
 
                 result.join(" ").to_string()
-            } // Self::Object(fields) => {
-              //     let mut result = Vec::new();
-
-              //     for (key, value) in fields {
-              //         result.push(format!("{}:{}\n", key.to_string(), value.to_string()));
-              //     }
-
-              //     result.join(" ").to_string()
-              // }
+            }
         };
 
         write!(f, "{}", output)

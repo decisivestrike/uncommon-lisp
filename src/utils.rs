@@ -1,35 +1,31 @@
-use std::{collections::VecDeque, fmt::Display};
+// #[derive(Debug, PartialEq)]
+// pub enum ULispType {
+//     Number,
+//     String,
+//     Bool,
+//     Nil,
 
-use crate::{errors::RuntimeError, executer::execute, scope::Scope, token::Token};
+//     List,
+//     // Object,
+//     Identifier,
+//     Expression,
+// }
 
-#[derive(Debug, PartialEq)]
-pub enum ULispType {
-    Number,
-    String,
-    Bool,
-    Nil,
+// impl Display for ULispType {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         let strlit = match self {
+//             ULispType::Number => "number",
+//             ULispType::String => "string",
+//             ULispType::Bool => "bool",
+//             ULispType::Nil => "nil",
+//             ULispType::List => "list",
+//             // ULispType::Object => "object",
+//             ULispType::Identifier | ULispType::Expression => unreachable!("wtf?"),
+//         };
 
-    List,
-    // Object,
-    Identifier,
-    Expression,
-}
-
-impl Display for ULispType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let strlit = match self {
-            ULispType::Number => "number",
-            ULispType::String => "string",
-            ULispType::Bool => "bool",
-            ULispType::Nil => "nil",
-            ULispType::List => "list",
-            // ULispType::Object => "object",
-            ULispType::Identifier | ULispType::Expression => unreachable!("wtf?"),
-        };
-
-        write!(f, "{}", strlit)
-    }
-}
+//         write!(f, "{}", strlit)
+//     }
+// }
 
 pub fn unescape(s: &str) -> String {
     let mut result = String::new();
@@ -70,26 +66,26 @@ pub fn unescape(s: &str) -> String {
 //     Ok(())
 // }
 
-pub fn get_token_strict(
-    tokens: &mut VecDeque<Token>,
-    type_: ULispType,
-) -> Result<Token, RuntimeError> {
-    match tokens.pop_front().unwrap() {
-        token if token.as_type() == type_ => Ok(token),
-        token => Err(RuntimeError::TypeMismatch {
-            expected: type_,
-            found: token.as_type(),
-        }),
-    }
-}
+// pub fn get_token_strict(
+//     tokens: &mut VecDeque<Token>,
+//     type_: ULispType,
+// ) -> Result<Token, RuntimeError> {
+//     match tokens.pop_front().unwrap() {
+//         token if token.as_type() == type_ => Ok(token),
+//         token => Err(RuntimeError::TypeMismatch {
+//             expected: type_,
+//             found: token.as_type(),
+//         }),
+//     }
+// }
 
-pub fn get_value_token(
-    tokens: &mut VecDeque<Token>,
-    scope: &mut Scope,
-) -> Result<Token, RuntimeError> {
-    match tokens.pop_front().unwrap() {
-        Token::Identifier(name) => Ok(scope.get_variable(&name)),
-        t @ Token::Expression(_) => execute(t, scope),
-        t => Ok(t),
-    }
-}
+// pub fn get_value_token(
+//     tokens: &mut VecDeque<Token>,
+//     scope: &mut Scope,
+// ) -> Result<Token, RuntimeError> {
+//     match tokens.pop_front().unwrap() {
+//         Token::Identifier(name) => Ok(scope.get_variable(&name)),
+//         t @ Token::Expression(_) => execute(t, scope),
+//         t => Ok(t),
+//     }
+// }

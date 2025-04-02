@@ -5,14 +5,7 @@ use std::{
 
 use lazy_static::lazy_static;
 
-use crate::{
-    errors::RuntimeError,
-    executer::execute,
-    extractor::evaluate,
-    scope::Scope,
-    token::Token,
-    utils::{ULispType, get_token_strict, get_value_token, unescape},
-};
+use crate::{errors::RuntimeError, executer::execute, scope::Scope, token::Token, utils::unescape};
 
 type BuiltinFunc = fn(VecDeque<Token>, &mut Scope) -> Result<Token, RuntimeError>;
 
@@ -62,8 +55,16 @@ pub fn create_variable(
         });
     }
 
-    let name = get_token_strict(&mut tokens, ULispType::Identifier)?;
-    let value = get_value_token(&mut tokens, scope)?;
+    let token = tokens.pop_front().unwrap();
+
+    let Token::Identifier(name) = token else {
+        return Err(RuntimeError::TypeMismatch {
+            expected: "identifier".to_string(),
+            found: token.as_type().to_string(),
+        });
+    };
+
+    let value = tokens.pop_front().unwrap().to_value(scope)?;
 
     scope.set_variable(name.to_string(), value);
 
@@ -136,8 +137,8 @@ pub fn if_then_else(mut tokens: VecDeque<Token>, scope: &mut Scope) -> Result<To
     };
 
     Ok(match condition {
-        true => then_block.to_primitive(scope)?,
-        false => else_block.to_primitive(scope)?,
+        true => then_block.to_value(scope)?,
+        false => else_block.to_value(scope)?,
     })
 }
 
@@ -260,7 +261,7 @@ pub fn print(tokens: VecDeque<Token>, scope: &mut Scope) -> Result<Token, Runtim
     let mut parts = Vec::new();
 
     for token in tokens {
-        let value = token.to_primitive(scope)?;
+        let value = token.to_value(scope)?;
 
         parts.push(value.to_string());
     }
