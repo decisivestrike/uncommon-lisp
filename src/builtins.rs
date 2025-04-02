@@ -6,7 +6,10 @@ use std::{
 use lazy_static::lazy_static;
 
 use crate::{
-    entities::{AsType, Datatype, Entity, List, Primitive, ToEntity, Value},
+    entities::{
+        Datatype, Entity, List, Primitive, Value,
+        traits::{AsType, ToEntity},
+    },
     errors::RuntimeError,
     scope::Scope,
     utils::unescape,

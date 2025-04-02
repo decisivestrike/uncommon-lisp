@@ -1,4 +1,4 @@
-use super::*;
+use super::{traits::ToEntity, *};
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
 pub struct List(pub VecDeque<Entity>);
@@ -32,11 +32,5 @@ impl Deref for List {
 impl DerefMut for List {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
-    }
-}
-
-impl ToEntity for List {
-    fn to_entity(self) -> Entity {
-        Entity::Value(Value::List(self))
     }
 }

@@ -1,7 +1,7 @@
 use std::{iter::Peekable, str::Chars};
 
 use crate::{
-    entities::{Entity, Expression, Identifier, List, Primitive, ToEntity},
+    entities::{Entity, Expression, Identifier, List, Primitive, traits::ToEntity},
     errors::ParseError,
 };
 
@@ -95,15 +95,24 @@ impl<'a> Parser<'a> {
     fn parse_expression(&mut self) -> Result<Option<Expression>, ParseError> {
         self.chars.next();
 
-        let fid = self.define(match self.chars.peek() {
-            Some(ch) => self.define(ch)?,
+        let fid: Identifier = match self.chars.peek() {
+            Some(ch) => match self.define(ch)? {
+                Some(id) => id,
+                None => {
+                    return Err(ParseError::ExpectedIdentifier {
+                        line: self.line,
+                        position: self.position,
+                    });
+                }
+            },
+
             None => {
                 return Err(ParseError::IncompleteExpression {
                     line: self.line,
                     position: self.position,
                 });
             }
-        })?;
+        };
 
         let mut args = List::new();
 

@@ -1,6 +1,9 @@
 use crate::builtins;
 
-use super::*;
+use super::{
+    traits::{AsType, ToEntity},
+    *,
+};
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
 pub struct Expression {
@@ -41,11 +44,5 @@ impl Expression {
         }
 
         Ok(self.clone())
-    }
-}
-
-impl ToEntity for Expression {
-    fn to_entity(self) -> Entity {
-        Entity::Expression(self)
     }
 }

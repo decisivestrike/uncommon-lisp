@@ -26,9 +26,3 @@ impl DerefMut for Identifier {
         &mut self.0
     }
 }
-
-impl ToEntity for Identifier {
-    fn to_entity(self) -> Entity {
-        Entity::Identifier(self)
-    }
-}

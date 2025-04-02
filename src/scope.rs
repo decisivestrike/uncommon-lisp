@@ -1,7 +1,10 @@
 use std::collections::HashMap;
 
 use crate::{
-    entities::{AsType, Datatype, Expression, List, Primitive, ToEntity, Value},
+    entities::{
+        Datatype, Expression, List, Primitive, Value,
+        traits::{AsType, ToEntity},
+    },
     errors::RuntimeError,
 };
 
