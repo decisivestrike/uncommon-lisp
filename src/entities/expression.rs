@@ -24,6 +24,24 @@ impl Expression {
             },
         }
     }
+
+    pub fn replace_all(&mut self, args: List, arg_names: List) -> Result<Expression, RuntimeError> {
+        for (name, value) in arg_names.iter().zip(args.iter()) {
+            while let Some(i) = self.args.iter().position(|t| *t == *name) {
+                if self.args[i].as_type() == Datatype::Expression {
+                    self.args[i] = self.args[i]
+                        .clone()
+                        .to_expression()?
+                        .replace_all(args.clone(), arg_names.clone())?
+                        .to_entity()
+                }
+
+                self.args[i] = value.clone();
+            }
+        }
+
+        Ok(self.clone())
+    }
 }
 
 impl ToEntity for Expression {

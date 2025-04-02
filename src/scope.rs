@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    entities::{Expression, List, Primitive, Value},
+    entities::{AsType, Datatype, Expression, List, Primitive, ToEntity, Value},
     errors::RuntimeError,
 };
 
@@ -13,8 +13,17 @@ pub struct UserFunction {
 
 impl UserFunction {
     pub fn call(mut self, args: List, scope: &mut Scope) -> Result<Value, RuntimeError> {
+        // TODO: add recursive parsing support
         for (name, value) in self.arg_names.iter().zip(args.iter()) {
             while let Some(i) = self.body.args.iter().position(|t| *t == *name) {
+                if self.body.args[i].as_type() == Datatype::Expression {
+                    self.body.args[i] = self.body.args[i]
+                        .clone()
+                        .to_expression()?
+                        .replace_all(args.clone(), self.arg_names.clone())?
+                        .to_entity()
+                }
+
                 self.body.args[i] = value.clone();
             }
         }

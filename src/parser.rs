@@ -95,38 +95,15 @@ impl<'a> Parser<'a> {
     fn parse_expression(&mut self) -> Result<Option<Expression>, ParseError> {
         self.chars.next();
 
-        let fid = match self.chars.peek() {
-            Some('a'..='z' | 'A'..='Z' | '_') => {
-                let maybe_id = self.parse_identifier_or_keyword();
-
-                match maybe_id {
-                    Entity::Identifier(id) => id,
-                    _ => {
-                        println!("Keyword?");
-                        return Err(ParseError::ExpectedIdentifier {
-                            line: self.line,
-                            position: self.position,
-                        });
-                    }
-                }
-            }
-
+        let fid = self.define(match self.chars.peek() {
+            Some(ch) => self.define(ch)?,
             None => {
-                println!("Okey...");
                 return Err(ParseError::IncompleteExpression {
                     line: self.line,
                     position: self.position,
                 });
             }
-
-            _ => {
-                println!("Not Letters?");
-                return Err(ParseError::ExpectedIdentifier {
-                    line: self.line,
-                    position: self.position,
-                });
-            }
-        };
+        })?;
 
         let mut args = List::new();
 
