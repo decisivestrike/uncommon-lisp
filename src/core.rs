@@ -1,13 +1,9 @@
 use std::io::{self, Write};
 use std::{error::Error, fs};
 
-use crate::executer::execute;
 use crate::parser::Parser;
-use crate::scope::Scope;
 
 pub fn repl() -> io::Result<()> {
-    let mut scope = Scope::new();
-
     loop {
         print!("ul> ");
         io::stdout().flush()?;
@@ -19,10 +15,10 @@ pub fn repl() -> io::Result<()> {
             break;
         }
 
-        match Parser::new(&input).parse() {
+        match Parser::new(&input).parse_expressions() {
             Ok(expressions) => {
                 for e in expressions {
-                    match execute(e, &mut scope) {
+                    match e.execute(None) {
                         Ok(result) => println!("{}", result.to_string()),
                         Err(error) => println!("RuntimeError: {}", error),
                     }
@@ -39,7 +35,7 @@ pub fn tokenize_file(path: &str) -> Result<(), Box<dyn Error>> {
     let file_content = fs::read_to_string(path)?;
 
     Parser::new(&file_content)
-        .parse()?
+        .parse_expressions()?
         .into_iter()
         .for_each(|token| println!("{:?}", token));
 
@@ -48,11 +44,10 @@ pub fn tokenize_file(path: &str) -> Result<(), Box<dyn Error>> {
 
 pub fn run_file(path: &str) -> Result<(), Box<dyn Error>> {
     let file_content = fs::read_to_string(path)?;
-    let expressions = Parser::new(&file_content).parse()?;
-    let mut scope = Scope::new();
+    let expressions = Parser::new(&file_content).parse_expressions()?;
 
     for e in expressions {
-        execute(e, &mut scope)?;
+        e.execute(None)?;
     }
 
     Ok(())

@@ -2,10 +2,24 @@ use std::{error::Error, fmt::Display};
 
 #[derive(Debug, PartialEq)]
 pub enum ParseError {
-    UnterminatedString { line: u64, position: u64 },
-    UnknownToken { line: u64, position: u64, ch: char },
-    IncompleteExpression { line: u64, position: u64 },
-    IncompleteList { line: u64, position: u64 },
+    UnterminatedString {
+        line: usize,
+        position: usize,
+    },
+    UnknownToken {
+        line: usize,
+        position: usize,
+        ch: char,
+    },
+    IncompleteExpression {
+        line: usize,
+        position: usize,
+    },
+    IncompleteList {
+        line: usize,
+        position: usize,
+    },
+    ExpectedExpression,
 }
 
 impl Display for ParseError {
@@ -18,7 +32,7 @@ impl Error for ParseError {}
 
 #[derive(Debug, PartialEq)]
 pub enum RuntimeError {
-    InvalidExpression,
+    // InvalidExpression,
     TypeMismatch { expected: String, found: String },
     NotEnoughArgs { min: usize },
     TooMuchArgs { max: usize },

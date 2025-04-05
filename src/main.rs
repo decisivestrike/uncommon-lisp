@@ -6,7 +6,6 @@ use std::{env, error::Error};
 mod builtins;
 mod core;
 mod errors;
-mod executer;
 mod extractor;
 mod parser;
 mod scope;
