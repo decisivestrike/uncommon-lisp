@@ -39,9 +39,7 @@ impl Function {
     }
 
     pub fn call(self, name: String, args: List) -> Result<Token, RuntimeError> {
-        let mut hasher = DefaultHasher::new();
-        name.hash(&mut hasher);
-        let prefix = hasher.finish().to_string();
+        let prefix = format!("${}_", name);
 
         self.arg_names
             .iter()

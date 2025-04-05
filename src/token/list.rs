@@ -6,7 +6,7 @@ use std::{
 
 use super::Token;
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct List(pub VecDeque<Token>);
 
 impl List {
@@ -42,6 +42,6 @@ impl DerefMut for List {
 
 impl Display for List {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self)
+        write!(f, "list...")
     }
 }

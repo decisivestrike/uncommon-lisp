@@ -1,4 +1,4 @@
 (if true 
-	(print "It's True!\n")
-	(print "Oh no! Logic is broken :("))
+	(print "It's OK!\n")
+	(print "Oh no! Logic is broken!\n")
 )

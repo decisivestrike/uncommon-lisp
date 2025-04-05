@@ -10,7 +10,7 @@ mod expression;
 mod identifier;
 mod list;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub enum Token {
     Number(f64),
     String(String),
@@ -25,6 +25,7 @@ pub enum Token {
 
 impl Token {
     pub fn into_value(self, maybe_prefix: Option<String>) -> Result<Token, RuntimeError> {
+        println!("into_value");
         Ok(match self {
             Token::Identifier(id) => {
                 let variable_name = match maybe_prefix {
@@ -57,6 +58,7 @@ impl Token {
         //     self = self.into_value()?;
         // }
 
+        println!("token ext {}", self);
         T::extract(self, maybe_prefix)
     }
 }

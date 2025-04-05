@@ -24,13 +24,12 @@ pub static BUILTIN_FUNCTIONS: Lazy<HashMap<String, BuiltinFunc>> = Lazy::new(|| 
         // while
 
         // Comparing
-        // ("eq", equal),
-        // ("ne", not_equal),
-        // ("lt", less_then),
-        // ("gt", greater_then),
-        // ("le", less_or_equal),
-        // ("ge", greater_or_equal),
-
+        ("eq", equal),
+        ("ne", not_equal),
+        ("lt", less_then),
+        ("gt", greater_then),
+        ("le", less_or_equal),
+        ("ge", greater_or_equal),
         // // Math
         ("add", add),
         ("sub", sub),
@@ -122,67 +121,70 @@ pub fn if_then_else(mut tokens: List, maybe_prefix: Option<String>) -> Result<To
     let condition: bool = tokens.pop_front().unwrap().extract(maybe_prefix.clone())?;
 
     let then_block = tokens.pop_front().unwrap();
-    let else_block = match has_else_block {
-        true => tokens.pop_front().unwrap(),
-        false => Token::Nil,
-    };
 
     Ok(match condition {
         true => then_block.into_value(maybe_prefix)?,
-        false => else_block.into_value(maybe_prefix)?,
+        false => {
+            let else_block = match has_else_block {
+                true => tokens.pop_front().unwrap(),
+                false => Token::Nil,
+            };
+
+            else_block.into_value(maybe_prefix)?
+        }
     })
 }
 
 // General
-// pub fn compare(mut tokens: List, op: &str) -> Result<Token, RuntimeError> {
-//     if tokens.len() < 2 {
-//         return Err(RuntimeError::NotEnoughArgs { min: 2 });
-//     }
+pub fn compare(mut tokens: List, op: &str) -> Result<Token, RuntimeError> {
+    if tokens.len() < 2 {
+        return Err(RuntimeError::NotEnoughArgs { min: 2 });
+    }
 
-//     let action: fn(&Token, &Token) -> bool = match op {
-//         "==" => |a, b| a == b,
-//         "!=" => |a, b| a != b,
-//         "<" => |a, b| a < b,
-//         ">" => |a, b| a > b,
-//         "<=" => |a, b| a <= b,
-//         ">=" => |a, b| a >= b,
-//         _ => unreachable!(),
-//     };
+    let action: fn(&Token, &Token) -> bool = match op {
+        "==" => |a, b| a == b,
+        "!=" => |a, b| a != b,
+        "<" => |a, b| a < b,
+        ">" => |a, b| a > b,
+        "<=" => |a, b| a <= b,
+        ">=" => |a, b| a >= b,
+        _ => unreachable!(),
+    };
 
-//     let base = tokens.pop_front().unwrap();
+    let base = tokens.pop_front().unwrap();
 
-//     for t in tokens {
-//         if !action(&base, &t) {
-//             return Ok(Token::Bool(false));
-//         }
-//     }
+    for t in tokens.0 {
+        if !action(&base, &t) {
+            return Ok(Token::Bool(false));
+        }
+    }
 
-//     Ok(Token::Bool(true))
-// }
+    Ok(Token::Bool(true))
+}
 
-// pub fn equal(tokens: List) -> Result<Token, RuntimeError> {
-//     compare(tokens, "==")
-// }
+pub fn equal(tokens: List, _: Option<String>) -> Result<Token, RuntimeError> {
+    compare(tokens, "==")
+}
 
-// pub fn not_equal(tokens: List) -> Result<Token, RuntimeError> {
-//     compare(tokens, "!=")
-// }
+pub fn not_equal(tokens: List, _: Option<String>) -> Result<Token, RuntimeError> {
+    compare(tokens, "!=")
+}
 
-// pub fn less_then(tokens: List) -> Result<Token, RuntimeError> {
-//     compare(tokens, "<")
-// }
+pub fn less_then(tokens: List, _: Option<String>) -> Result<Token, RuntimeError> {
+    compare(tokens, "<")
+}
 
-// pub fn greater_then(tokens: List) -> Result<Token, RuntimeError> {
-//     compare(tokens, ">")
-// }
+pub fn greater_then(tokens: List, _: Option<String>) -> Result<Token, RuntimeError> {
+    compare(tokens, ">")
+}
 
-// pub fn less_or_equal(tokens: List) -> Result<Token, RuntimeError> {
-//     compare(tokens, "<=")
-// }
+pub fn less_or_equal(tokens: List, _: Option<String>) -> Result<Token, RuntimeError> {
+    compare(tokens, "<=")
+}
 
-// pub fn greater_or_equal(tokens: List) -> Result<Token, RuntimeError> {
-//     compare(tokens, "=>")
-// }
+pub fn greater_or_equal(tokens: List, _: Option<String>) -> Result<Token, RuntimeError> {
+    compare(tokens, "=>")
+}
 
 pub fn add(tokens: List, maybe_prefix: Option<String>) -> Result<Token, RuntimeError> {
     tokens

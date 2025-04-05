@@ -4,9 +4,9 @@ use crate::{builtins::BUILTIN_FUNCTIONS, errors::RuntimeError, scope::get_functi
 
 use super::{Identifier, List, Token};
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Expression {
-    pub fid: Identifier,
+    pub fid: Option<Identifier>,
     pub args: List,
     pub line: usize,
     pub pos: usize,
@@ -18,9 +18,17 @@ impl Expression {
         T: IntoIterator<Item = Token>,
     {
         let mut iter = iterable.into_iter();
+        let maybe_fid = iter.next();
+        let fid;
+
+        if maybe_fid.is_some() {
+            fid = Some(maybe_fid.unwrap().extract::<Identifier>(None).unwrap());
+        } else {
+            fid = None;
+        }
 
         Self {
-            fid: iter.next().unwrap().extract(None).unwrap(),
+            fid,
             args: List::from_iterable(iter),
             line,
             pos,
@@ -28,7 +36,10 @@ impl Expression {
     }
 
     pub fn execute(&self, maybe_prefix: Option<String>) -> Result<Token, RuntimeError> {
-        let func_id = self.fid.clone();
+        let Some(func_id) = self.fid.clone() else {
+            return Ok(Token::Nil);
+        };
+
         let args = self.args.clone();
 
         match BUILTIN_FUNCTIONS.get(func_id.0.as_str()) {
@@ -44,7 +55,7 @@ impl Expression {
 
 impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self)
+        write!(f, "expression...")
     }
 }
 

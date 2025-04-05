@@ -87,23 +87,6 @@ impl<'a> Parser<'a> {
         }
     }
 
-    // fn skip_before_expression(&mut self) {
-    //     while let Some(&ch) = self.chars.peek() {
-    //         match ch {
-    //             '(' => break,
-    //             '\n' => {
-    //                 self.chars.next();
-    //                 self.line += 1;
-    //                 self.position = 0;
-    //             }
-    //             _ => {
-    //                 self.chars.next();
-    //                 self.position += 1;
-    //             }
-    //         }
-    //     }
-    // }
-
     fn parse_expression(&mut self) -> Result<Option<Token>, ParseError> {
         let mut tokens = VecDeque::new();
 
